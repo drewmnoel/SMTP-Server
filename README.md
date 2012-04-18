@@ -39,5 +39,5 @@ Client Tasks
 
 Links
 ----------
-* [Original SMTP RFC](http://tools.ietf.org/html/rfc821 "RFC821")
-* [Latest SMTP RFC](http://tools.ietf.org/html/rfc0821 "RFC0821")
+* [Original SMTP RFC](http://tools.ietf.org/html/rfc0821 "RFC0821")
+* [Latest SMTP RFC](http://tools.ietf.org/html/rfc5321 "RFC5321")
