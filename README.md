@@ -36,3 +36,8 @@ Client Tasks
 * Communicate with simple and extended SMTPs
 * Display entire interaction
 * Optional debug log
+
+Links
+----------
+* [Original SMTP RFC](http://tools.ietf.org/html/rfc821 "RFC821")
+* [Latest SMTP RFC](http://tools.ietf.org/html/rfc821 "RFC821")
