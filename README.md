@@ -4,7 +4,7 @@ This project involves basic SMTP implementation on both the client and server le
 
 Authors:
 ----------
-* Richard Couillard -- Tasks
+* Richard Couillard
 * Scott Fenwick
 * Alexander Leary
 * Daniel Mercado
