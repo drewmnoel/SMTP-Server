@@ -16,26 +16,25 @@ Pre-programming Tasks
 
 Server Tasks
 ----------
-* Create new thread for each connection
-* Log all details of transactions
-* Create message buffer from client interaction
-* Check to see if allowed to relay to destination
-* Codes: 220, 221, 250, 251, 252, 354, 421, 447, 500
-* Read from message buffer in dedicated thread
-* Send to user if local user
-* Send to next if not local user (acting as a client)
-* Remove message from buffer
-* File mutex between reading and writing
+1. Talk to Scott DNS to register domain
+2. Create new thread for each connection
+3. Log all details of transactions
+4. Create message buffer from client interaction
+5. Check to see if allowed to relay to destination
+6. Codes: 220, 221, 250, 251, 252, 354, 421, 447, 500
+7. Read from message buffer in dedicated thread
+8. Send to user if local user, or correct relay, obtained via Scott DNS
+9. Remove message from buffer
 
 Client Tasks
 ----------
-* Interface (prompt is fine)
-* From, To, Server, Message
-* Send data to SMTP server
-* Check for error codes
-* Communicate with simple and extended SMTPs
-* Display entire interaction
-* Optional debug log
+1. Interface (prompt is fine)
+2. From, To, Server, Message
+3. Send data to SMTP server
+4. Check for error codes
+5. Communicate with simple and extended SMTPs
+6. Display entire interaction
+7. Optional debug log
 
 Links
 ----------
