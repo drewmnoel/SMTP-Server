@@ -1,6 +1,6 @@
 //ClientSocket.h
 #pragma once
-#include "Winsock2.h"
+#include <windows.h>
 #include "Socket.h"
 #include <string>
 

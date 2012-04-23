@@ -3,7 +3,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include "WinSock2.h"
+#include <windows.h>
 #include "Socket.h"
 
 using namespace std;

@@ -1,7 +1,7 @@
 //Socket.h
 #pragma once
 #include <iostream>
-#include "WinSock2.h"
+#include <windows.h>
 
 using namespace std;
 
