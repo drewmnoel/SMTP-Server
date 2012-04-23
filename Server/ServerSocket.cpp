@@ -98,18 +98,7 @@ bool ServerSocket::RecvData(char *buffer, int size)
 		buffer[j] = tolower(buffer[j]);
 
 	// Process commands
-	if (strncmp(buffer, "list", 4) == 0)
-	{
-		// Client wants a dir list!
-		// We'll just send them the current one
-		dirList("./");
-	}
-	else if (strncmp(buffer, "send", 4) == 0)
-	{
-		// Client wants a file!
-		sendFile(buffer);
-	}
-	else if (strncmp(buffer, "quit", 4) == 0)
+	if (strncmp(buffer, "quit", 4) == 0)
 	{
 		// Client wants us to go away!
 		done = true;
@@ -149,74 +138,7 @@ void ServerSocket::StartHosting(int port)
 	Listen();
 }
 
-void ServerSocket::dirList(string dir)
-{
-	string theList;
-
-	theList = list(dir).c_str();
-
-	// Sends the length of the list
-	SendData(theList.length());
-
-	// Waits for an "OK"
-	RecvAndDisplayMessage();
-
-	unsigned long sent = 0;
-	while (sent != theList.length())
-	{
-		sent += SendData(theList.substr(sent, STRLEN));
-	}
-}
-
 bool ServerSocket::isOver()
 {
 	return (done || !authed);
-}
-
-void ServerSocket::sendFile(string filename)
-{
-	// Chop off the "send " part to get the filename
-	filename = filename.substr(5, filename.length());
-
-	// Chop off the newline character
-	//filename = filename.substr(0, filename.length() - 1);
-
-	// Lock in the current directory
-	filename = "./" + filename;
-
-	ifstream fin(filename.c_str(), ios::binary);
-
-	// Send 0 (could not open)
-	if (!fin.is_open())
-	{
-		SendData(0);
-		return;
-	}
-
-	// Get the file size to send
-	fin.seekg(0, ios::end);
-	unsigned long size = fin.tellg();
-	fin.seekg(0, ios::beg);
-
-	// Send the size and wait for an OK
-	SendData(size);
-	RecvAndDisplayMessage();
-
-	// UNLEASH THE KRAKEN
-	char buffer[STRLEN];
-	unsigned long sent = 0;
-
-	// Send as much as we can at once
-	while (sent + STRLEN <= size)
-	{
-		fin.read(buffer, STRLEN);
-
-		sent += SendData(buffer, STRLEN);
-	}
-	if (sent != size)
-	{
-		// Send those pesky remaining bytes... THE HARD WAY
-		fin.read(buffer, size - sent);
-		SendData(buffer, size - sent);
-	}
 }

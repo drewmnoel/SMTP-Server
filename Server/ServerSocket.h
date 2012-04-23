@@ -8,8 +8,6 @@
 
 using namespace std;
 
-string list(string);
-
 class ServerSocket: public Socket
 {
 private:
@@ -29,7 +27,5 @@ public:
 	int SendData(int);
 	int SendData(string);
 	void StartHosting(int port);
-	void dirList(string);
 	bool isOver();
-	void sendFile(string);
 };
