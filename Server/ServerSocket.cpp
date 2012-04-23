@@ -3,25 +3,6 @@
 ServerSocket::ServerSocket()
 {
 	done = false;
-	authed = false;
-}
-
-bool ServerSocket::Auth(void)
-{
-	SendData("LOGIN");
-
-	char buffer[STRLEN];
-	int i = recv(mySocket, buffer, STRLEN, 0);
-	buffer[i] = '\0';
-	if (strcmp(buffer, "ADMIN") == 0)
-	{
-		authed = true;
-		SendData("WELCOME");
-		return true;
-	}
-
-	SendData("UNWELCOME");
-	return false;
 }
 
 void ServerSocket::Bind(int port)
@@ -136,9 +117,4 @@ void ServerSocket::StartHosting(int port)
 {
 	Bind(port);
 	Listen();
-}
-
-bool ServerSocket::isOver()
-{
-	return (done || !authed);
 }

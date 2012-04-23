@@ -12,11 +12,9 @@ class ServerSocket: public Socket
 {
 private:
 	bool done;
-	bool authed;
 public:
 	ServerSocket();
 
-	bool Auth(void);
 	void Bind(int port);
 	void GetAndSendMessage();
 	void Listen();
