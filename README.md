@@ -10,10 +10,6 @@ Authors:
 * Daniel Mercado
 * Drew Noel
 
-Pre-programming Tasks
-----------
-* Structure and outline process
-
 Server Tasks
 ----------
 1. Talk to Scott DNS to register domain -- `Scott`
