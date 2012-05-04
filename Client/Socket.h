@@ -22,7 +22,9 @@ public:
 	Socket();
 	~Socket();
 	bool SendData(char*);
-	bool RecvData(char*, int);
+	bool SendData(string);
+	bool RecvData(char*, int*);
+	bool RecvData(string&);
 	int getPort();
 	char* getAddr();
 	void CloseConnection();

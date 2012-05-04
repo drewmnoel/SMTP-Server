@@ -1,5 +1,6 @@
 //Socket.cpp
 #include "Socket.h"
+#include <cstdio>
 
 Socket::Socket()
 {
@@ -36,10 +37,33 @@ bool Socket::SendData(char *buffer)
 	return true;
 }
 
-bool Socket::RecvData(char *buffer, int size)
+bool Socket::SendData(string input)
 {
-	int i = recv(mySocket, buffer, size, 0);
+    char buffer[STRLEN];
+    memset(buffer,0,STRLEN);
+    for(int x = 0;x < input.length();x++)
+    {
+        buffer[x] = input[x];
+    }
+    send(mySocket, buffer, strlen(buffer), 0);
+    return true;
+}
+
+bool Socket::RecvData(char *buffer, int *size)
+{
+	int i = recv(mySocket, buffer, (*size), 0);
 	buffer[i] = '\0';
+    printf("%s\n",buffer);
+	return true;
+}
+
+bool Socket::RecvData(string &input)
+{
+	char buffer[STRLEN];
+	memset(buffer, 0, STRLEN);
+	int i = recv(mySocket, buffer, STRLEN, 0);
+    input.reserve(i);
+    input = buffer;
 	return true;
 }
 

@@ -1,30 +1,15 @@
 //Socket.h
 #pragma once
-#include <iostream>
-#include <windows.h>
-
-using namespace std;
+#include <string>
+#include "WinSock2.h"
 
 const int STRLEN = 256;
 
-class Socket
-{
-protected:
-	WSADATA wsaData;
-	SOCKET mySocket;
-	SOCKET myBackup;
-	SOCKET acceptSocket;
-	sockaddr_in myAddress;
-	long clientPort, port;
-	char* clientAddress;
-	char *address;
-public:
-	Socket();
-	~Socket();
-	bool SendData(char*);
-	bool RecvData(char*, int);
-	int getPort();
-	char* getAddr();
-	void CloseConnection();
-	void GetAndSendMessage();
-};
+SOCKET setUpSocket();
+void SendData(SOCKET,std::string);
+void RecvData(SOCKET,std::string&);
+void CloseSocket(SOCKET&);
+bool Connect(SOCKET,std::string,int);
+void Bind(SOCKET,int);
+void Listen(SOCKET, int);
+SOCKET Accept(SOCKET,std::string&);
