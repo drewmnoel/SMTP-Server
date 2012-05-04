@@ -41,7 +41,7 @@ bool Socket::SendData(string input)
 {
     char buffer[STRLEN];
     memset(buffer,0,STRLEN);
-    for(int x = 0;x < input.length();x++)
+    for(unsigned int x = 0;x < input.length();x++)
     {
         buffer[x] = input[x];
     }

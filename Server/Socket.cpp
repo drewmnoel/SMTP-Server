@@ -29,7 +29,7 @@ void SendData(SOCKET sock,std::string input)
 {
     char buffer[STRLEN];
     memset(buffer,0,STRLEN);
-    for(int x = 0;x < input.length();x++)
+    for(unsigned int x = 0;x < input.length();x++)
     {
         buffer[x] = input[x];
     }
@@ -48,7 +48,7 @@ void RecvData(SOCKET sock,std::string &input)
 void CloseSocket(SOCKET &sock)
 {
     closesocket(sock);
-    sock = NULL;
+    sock = INVALID_SOCKET;
 }
 
 void Listen(SOCKET sock,int numOfConnections)
