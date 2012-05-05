@@ -9,7 +9,7 @@
 //Be sure to properly exit the program so that a recieve loop doesn't occur, 
 //it kinda mucks up the log file with entries
 
-#include "Socket.h"
+#include "gui_socket.h"
 
 //server
 

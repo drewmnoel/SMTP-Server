@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "Socket.h"
+#include "gui_socket.h"
 #include <ctime>
 // Define control identifiers
 #define IDC_TO 1001
@@ -245,6 +245,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						char convert[128]; memset( convert, '\0', sizeof( convert ) );
 						static char endKey[1]; memset( endKey, '\0', sizeof( endKey ) );
 						//http://msdn.microsoft.com/en-us/library/system.windows.forms.textbox.autocompletesource.aspx
+						
 						//ClientSocket connectDNS;
 						//connectDNS.ConnectToServer( IPAddress, 53 );
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
@@ -261,6 +262,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, Message, "Error", MB_OK );
 						memset( Message, '\0', sizeof( Message ) );
 						
+						
 						strcpy( Message, "HELO " );
 						hwndToChar( hwndFrom, convert );
 						removeUser( convert );
@@ -271,11 +273,14 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
+						
 						//connectSMTP.RecvData( Message ); //250 Hello example.com, I am glad to meet you
 						strcpy( Message, "250 Hello example.com, I am glad to meet you\0" );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						MessageBox( popup, Message, "250", MB_OK );
 						memset( Message, '\0', sizeof( Message ) );
+						
 						
 						strcpy( Message, "MAIL FROM:<" );
 						hwndToChar( hwndFrom, convert );
@@ -286,14 +291,17 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
+						
 						//connectSMTP.RecvData( Message );
 						strcpy( Message, "250 Ok\0" );
 						MessageBox( popup, Message , "250 Ok", MB_OK );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						if( strcmp( Message, "250 Ok\0" ) != 0) {
 							SetWindowText(hwndFrom, "");
 							return 1;
 						} memset( Message, '\0', sizeof( Message ) );
+						
 						
 						strcpy( Message, "RCPT TO:<" );
 						hwndToChar( hwndTo, convert );
@@ -304,10 +312,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
+						
 						//connectSMTP.RecvData( Message );
 						strcpy( Message, "250 Ok\0" );
 						MessageBox( popup, Message , "250 Ok", MB_OK );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						if( strcmp( Message, "250 Ok\0" ) != 0) {
 							SetWindowText(hwndFrom, "");
 							return 1;
@@ -319,9 +329,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						MessageBox( popup, Message, "DATA", MB_OK );
 						memset( Message, '\0', sizeof( Message ) );
 						
+						
 						//connectSMTP.RecvData( Message );
 						strcpy( Message, "354 End Data with <CR><LF>.<CR><LF>\0" );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						if( strncmp( Message, "354 End Data with", 17 ) != 0) 
 						{
 							SetWindowText(hwndFrom, "");
@@ -401,7 +413,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						
 						//connectSMTP.RecvData( Message );
 						strcpy( Message, "250 Ok: queued as 12345\0" );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						char* findQueued = strstr( Message, "queued as " );
 						char queued[100]; memset( queued, '\0', sizeof( queued ) );
 						strncpy( queued, findQueued + 9, strlen( Message ) - 17 );
@@ -413,7 +426,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						
 						//connectSMTP.RecvData( Message );
 						strcpy( Message, "221 Bye\0" );
-						checkError( Message );
+						if( checkError( Message ) )
+							break;
 						MessageBox( popup, Message , "End", MB_OK );
 						memset( Message, '\0', sizeof( Message ) );
 						
@@ -541,9 +555,4 @@ bool checkError( char* temp )
 	{
 		return false;
 	}
-}
-
-void sendMessageBody( ClientSocket* connect )
-{
-	
 }
