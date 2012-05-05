@@ -124,7 +124,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	string clientIP = temp->cIP;
 	regex from("MAIL FROM:<[\\w.]+@[\\w.]+>");
 	regex to("RCPT TO:<[\\w.]+@[\\w.]+>");
-
+    bool validRelay;
 	stringstream completeMessage;
 
 	DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
@@ -266,38 +266,43 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
-				if (response == "3")
-				{
-					cout << "Domain not registered\n";
-					//*Put it at the end of the file
-					return 0;
-				}
-				else if (response == "4")
-				{
-					cout << "Bad command\n";
-					return 0;
-				}
-				else
-				{
-					if (!Connect(relay, response, PORT))
-					{
-						cout << "Connection to relay failed\n";
-						return 0;
-					}
-				}
-				//check if its an ip or an invalid address and cannot sent it
-			}
-			ReleaseMutex(dnsLock);
+			    if (response == "3") 
+                {
+               		cout << "Domain not registered\n";
+               		//*Put it at the end of the file
+                    validRelay = false;	 
+                    return 0;
+            	} 
+			    else if (response == "4") 
+                {
+              		cout << "Bad command\n";
+              		validRelay = false;
+              		return 0;
+            	}
+            	else 
+                {
+            	    SOCKET relay;
+                    if (!Connect(relay,response,PORT)) {
+                 	   cout << "Connection to relay failed\n";
+                 	   validRelay = true;
+                 	   return 0;
+                 	}
+                 	else
+                 	    validRelay = false;
+            	}
+                //check if its an ip or an invalid address and cannot sent it
+            }
+            ReleaseMutex(dnsLock);
 
-			//now that we have an ip we can continue or we can end it here if invalid or whatever 
-			if (relay)
-			{
-				while (clientData != ".")
-				{
-					getline(toFile, clientData);
-					SendData(relay, clientData + "\n");
-				}
-			}
+            //now that we have an ip we can continue or we can end it here if invalid or whatever 
+            if (validRelay)
+            {
+                while (userData != ".")
+                {
+                    getline(toFile, clientData);
+                    SendData(relay, clientData + "\n");
+                }
+            }     
 		}
 	}
 	ReleaseMutex(fileLock);
