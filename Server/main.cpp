@@ -7,9 +7,10 @@
 
 #define DNS_NAME        "servera"
 #define DNS_NAME_BACKUP "server1"
-#define DNS_IP          "127.0.0.1"
+#define DNS_IP          "129.21.112.89"
 #define DNS_PORT        53
 #define PORT            25
+//#define MESSAGE_SIZE
 
 
 using namespace std;
@@ -127,6 +128,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     ReleaseMutex(dnsLock);
 
     //here is where we send and recieve data from the client
+    
 
 
 
@@ -159,9 +161,25 @@ DWORD WINAPI fileThread(LPVOID lpParam)
         {
             //dns stuff after we parse the to line
             //SendData(dns,"who " + Domain);
-            //string response;
+            string response;
             //RecvData(dns,response);
             //check if its an ip or an invalid address and cant sent it
+            if (response == "3") {
+               cout << "Domain not registered\n";
+               //*Put it at the end of the file
+               return 0;
+            } else if (response == "4") {
+              cout << "Bad command\n";
+              return 0;
+            }
+            else {
+                 SOCKET relay;
+                 if (!Connect(relay,response,PORT)) {
+                    cout << "Connection to relay failed\n";
+                    return 0;
+                 }
+            }
+            
         }
         ReleaseMutex(dnsLock);
 
