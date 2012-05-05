@@ -62,7 +62,8 @@ void Listen(SOCKET sock,int numOfConnections)
     }
 }
 
-SOCKET Accept(SOCKET sock,std::string &IP){
+SOCKET Accept(SOCKET sock,std::string &IP)
+{
     sockaddr_in cAddress;
     cAddress.sin_family = AF_INET;
     int size = sizeof(cAddress);

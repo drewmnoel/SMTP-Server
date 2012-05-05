@@ -52,6 +52,7 @@ int main()
 		return (1);
 	}
 
+	//Set up a listening socket
 	SOCKET server = setUpSocket();
 	Bind(server, PORT);
 	Listen(server, 99);
@@ -59,6 +60,7 @@ int main()
 	HANDLE hThread;
 	DWORD dwThreadId;
 
+	//Set up a socket to the DNS server
 	clientAndDns justDns;
 	justDns.dns = dnsSocket;
 	HANDLE readFile = CreateThread(NULL, 0, fileThread, (LPVOID) &justDns, 0,
@@ -66,10 +68,12 @@ int main()
 
 	while (1)
 	{
+		//Bind server socket
 		clientAndDns temp;
 		temp.client = Accept(server, temp.cIP);
 		temp.dns = dnsSocket;
 
+		//Set up a client thread
 		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
 				&dwThreadId);
 		if (hThread == NULL)
@@ -267,20 +271,20 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
-			    if (response == "3") 
+			    if (response == "3")
                 {
                		cout << "Domain not registered\n";
                		//*Put it at the end of the file
-                    validRelay = false;	 
+                    validRelay = false;
                     return 0;
-            	} 
-			    else if (response == "4") 
+            	}
+			    else if (response == "4")
                 {
               		cout << "Bad command\n";
               		validRelay = false;
               		return 0;
             	}
-            	else 
+            	else
                 {
             	    SOCKET relay;
                     if (!Connect(relay,response,PORT)) {
@@ -295,7 +299,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             }
             ReleaseMutex(dnsLock);
 
-            //now that we have an ip we can continue or we can end it here if invalid or whatever 
+            //now that we have an ip we can continue or we can end it here if invalid or whatever
             if (validRelay)
             {
                 while (clientData != ".")
@@ -303,7 +307,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
                     getline(toFile, clientData);
                     SendData(relay, clientData + "\n");
                 }
-            }     
+            }
 		}
 	}
 	ReleaseMutex(fileLock);
