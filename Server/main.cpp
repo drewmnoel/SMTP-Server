@@ -93,9 +93,9 @@ SOCKET dnsRegister(string ip, string name, string backup)
 	SOCKET temp;
 	temp = setUpSocket();
 	Connect(temp, ip, DNS_PORT);
-
 	string response;
 
+	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
 	RecvData(temp, response);
 	if (response == "5")
