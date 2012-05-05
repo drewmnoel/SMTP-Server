@@ -100,21 +100,25 @@ SOCKET dnsRegister(string ip, string name, string backup)
 	RecvData(temp, response);
 	if (response == "5")
 	{
+	    //Send backup request to DNS server
 		cout << "Name already taken trying backup name" << endl;
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
 		if (response == "5")
 		{
+		    //Kill if both names are taken
 			cout << "Both names taken quitting server" << endl;
 			exit(1);
 		}
 		else
 		{
+			//Register backup
 			registered_name = DNS_NAME_BACKUP;
 			return temp;
 		}
 	}
+	//Register primary
 	registered_name = DNS_NAME;
 	return temp;
 }
@@ -134,11 +138,13 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
 	if (dwWaitResult == WAIT_OBJECT_0)
 	{
+		//Test IP against DNS
 		SendData(dns, "who " + clientIP);
 		string response;
 		RecvData(dns, response);
 		bool fowarded = false;
 
+		//If 0, it's from a server, if not, it's from a client
 		if (response == "0")
 		{
 			fowarded = true;
