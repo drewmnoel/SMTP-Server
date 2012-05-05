@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <sstream>
 #include <regex>
+#include <ctime>
 #include <fstream>
 #include "Socket.h"
 
@@ -20,6 +21,7 @@ using namespace std;
 SOCKET dnsRegister(string, string, string);
 DWORD WINAPI ClientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
+void eventLog(string info);
 
 HANDLE dnsLock;
 HANDLE fileLock;
@@ -52,6 +54,7 @@ int main()
 		return (1);
 	}
 
+	//Set up a listening socket
 	SOCKET server = setUpSocket();
 	Bind(server, PORT);
 	Listen(server, 99);
@@ -59,6 +62,7 @@ int main()
 	HANDLE hThread;
 	DWORD dwThreadId;
 
+	//Set up a socket to the DNS server
 	clientAndDns justDns;
 	justDns.dns = dnsSocket;
 	HANDLE readFile = CreateThread(NULL, 0, fileThread, (LPVOID) &justDns, 0,
@@ -66,12 +70,15 @@ int main()
 
 	while (1)
 	{
+		//Bind server socket
 		clientAndDns temp;
 		temp.client = Accept(server, temp.cIP);
 		temp.dns = dnsSocket;
 
+		//Set up a client thread
 		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
 				&dwThreadId);
+		eventLog("Started thread " + GetCurrentThreadId() + " at " + temp.cIP); 
 		if (hThread == NULL)
 		{
 			printf("CreateThread() failed: %d\n", (int) GetLastError());
@@ -89,28 +96,39 @@ SOCKET dnsRegister(string ip, string name, string backup)
 	SOCKET temp;
 	temp = setUpSocket();
 	Connect(temp, ip, DNS_PORT);
-
 	string response;
 
+	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
+	eventLog("Sent iam " + name + "to dns server");
 	RecvData(temp, response);
 	if (response == "5")
 	{
-		cout << "Name already taken trying backup name" << endl;
+		//Send backup request to DNS server
+		cout << "Name already taken. Trying backup name" << endl;
+		eventLog("Name (" + name + ") already taken. Trying backup name");
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
 		if (response == "5")
 		{
+		    //Kill if both names are taken
 			cout << "Both names taken quitting server" << endl;
+			eventLog("Both names taken. Quitting server.");
 			exit(1);
 		}
 		else
 		{
+			//Register backup
+            cout << "Using backup name" << endl;
+            eventLog("Using backup name");
 			registered_name = DNS_NAME_BACKUP;
 			return temp;
 		}
 	}
+	//Register primary
+	cout << "First name registered successfully" << endl;
+    eventLog("First name registered successfully");
 	registered_name = DNS_NAME;
 	return temp;
 }
@@ -130,15 +148,21 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
 	if (dwWaitResult == WAIT_OBJECT_0)
 	{
+		//Test IP against DNS
 		SendData(dns, "who " + clientIP);
 		string response;
 		RecvData(dns, response);
 		bool fowarded = false;
 
+		//If 0, it's from a server, if not, it's from a client
 		if (response == "0")
 		{
+            eventLog("Message is from a server");
 			fowarded = true;
 		}
+		if (forwarded == false)
+		    eventLog("Message is from a client");
+		    
 		printf("message is from a %s\n", (fowarded) ? "server" : "client");
 	}
 	ReleaseMutex(dnsLock);
@@ -153,29 +177,35 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		return 0;
 	}
 	SendData(client, "250 Hello " + data.substr(5) + ", I am glad to meet you");
-	RecvData(client, data);
+	eventLog("250 Hello " + data.substr(5) + ", I am glad to meet you");
+    RecvData(client, data);
 	while (data != "DATA")
 	{
 		if (regex_match(data, from))
 		{
 			completeMessage << data << endl;
+			eventLog(client, "FROM 250 OK");
 			SendData(client, "250 OK");
 		}
 		else if (regex_match(data, to))
 		{
 			completeMessage << data << endl;
+			eventLog(client, "RCPT 250 OK");
 			SendData(client, "250 OK");
 		}
 		else
 		{
 			SendData(client, "500 Command Syntax Error");
+			eventLog(client, "500 Command Syntax Error");
 		}
 		RecvData(client, data);
 	}
 	SendData(client, "354 End data with <CR><LF>.<CR><LF>");
+	eventLog("354 End data with <CR><LF>.<CR><LF>");
 	completeMessage << data << endl;
 	while (data != ".")
 	{
+        eventLog("Receiving data \"" + data + "\" from " + clientIP);
 		RecvData(client, data);
 		completeMessage << data;
 	}
@@ -255,6 +285,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 						<< endl;
 			}
 		}
+		
 		//We are forwarding the message
 		else
 		{
@@ -267,20 +298,20 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
-			    if (response == "3") 
+			    if (response == "3")
                 {
                		cout << "Domain not registered\n";
                		//*Put it at the end of the file
-                    validRelay = false;	 
+                    validRelay = false;
                     return 0;
-            	} 
-			    else if (response == "4") 
+            	}
+			    else if (response == "4")
                 {
               		cout << "Bad command\n";
               		validRelay = false;
               		return 0;
             	}
-            	else 
+            	else
                 {
             	    SOCKET relay;
                     if (!Connect(relay,response,PORT)) {
@@ -295,7 +326,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             }
             ReleaseMutex(dnsLock);
 
-            //now that we have an ip we can continue or we can end it here if invalid or whatever 
+            //now that we have an ip we can continue or we can end it here if invalid or whatever
             if (validRelay)
             {
                 while (clientData != ".")
@@ -303,8 +334,35 @@ DWORD WINAPI fileThread(LPVOID lpParam)
                     getline(toFile, clientData);
                     SendData(relay, clientData + "\n");
                 }
-            }     
+            }
 		}
 	}
 	ReleaseMutex(fileLock);
 }
+
+//name: eventLog
+//Parameters: Info to be logged
+//Returns: none
+//Purpose: Keep a log of all server activities
+void eventLog(string info)
+{
+    char dia[10]; //A buffer to store the date
+    char hora[10]; //A buffer to store the time
+    fstream fout;
+    fout.open("server_log.txt", ios::app);
+    if (message != "")
+    {
+        fout.open("server_log.csv", ios::app);
+        fout << "\""
+             << _strdate(dia)
+             << "\",\""
+             << _strtime(hora)
+             << "\",\""
+             << ip
+             << "\",\""
+             << port; 
+             << "\",\""
+             << message
+             << "\"\n";
+        fout.close();
+    }
