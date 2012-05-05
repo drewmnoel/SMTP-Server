@@ -203,7 +203,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 {
     clientAndDns *temp2 = (clientAndDns*) lpParam;
     SOCKET dns = temp2->dns;
-    string temp, userName, user;
+    string clientData, userName, user;
     stringstream toFile;
     bool forward;
     DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
@@ -211,28 +211,28 @@ DWORD WINAPI fileThread(LPVOID lpParam)
     {
         //we have control of the file now to read
         fstream fin("master_baffer.woopsy", ios::in);
-        getline(fin, temp);
-        if (temp == "True")
+        getline(fin, clientData);
+        if (clientData == "True")
             forward = true;
         else
             forward = false;
-        toFile << temp << endl;
+        toFile << clientData << endl;
             
-        getline(fin, temp);
-        toFile << temp << endl;
+        getline(fin, clientData);
+        toFile << clientData << endl;
             
-        while (temp != "DATA")
+        while (clientData != "DATA")
         {
-            getline(fin, temp);
-            toFile << temp << endl;
+            getline(fin, clientData);
+            toFile << clientData << endl;
         }
-        while (temp != ".")
+        while (clientData != ".")
         {
-            getline(fin, temp);
-            toFile << temp << endl;
+            getline(fin, clientData);
+            toFile << clientData << endl;
         }
         fin.close();
-        temp = "";
+        clientData = "";
         
         if (!forward)
         {
