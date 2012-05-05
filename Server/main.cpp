@@ -298,7 +298,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             //now that we have an ip we can continue or we can end it here if invalid or whatever 
             if (validRelay)
             {
-                while (userData != ".")
+                while (clientData != ".")
                 {
                     getline(toFile, clientData);
                     SendData(relay, clientData + "\n");
