@@ -209,6 +209,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 	string clientData, userName, user;
 	stringstream toFile;
 	bool forward;
+	bool validRelay;
 	SOCKET relay;
 
 	DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
