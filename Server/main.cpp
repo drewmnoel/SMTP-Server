@@ -280,7 +280,15 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             ReleaseMutex(dnsLock);
 
             //now that we have an ip we can continue or we can end it here if invalid or whatever 
-        }
+            if (validRelay)
+            {
+                while (userData != ".")
+                {
+                    getline(fin, toFile);
+                    SendData(relay, clientData + "\n");
+                }
+            }     
+		}
     }
     ReleaseMutex(fileLock);
 }
