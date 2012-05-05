@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <sstream>
 #include <regex>
+#include <fstream>
 #include "Socket.h"
 
 #define DNS_NAME        "servera"
@@ -146,7 +147,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     if(data.substr(0,4) != "HELO")
     {
         SendData(client,"221");
-        break;
+        return 0;
     }
     SendData(client,"250 Hello " + data.substr(5) + ", I am glad to meet you");
     RecvData(client,data);
@@ -180,16 +181,16 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     RecvData(client,data);
     if(data == "QUIT")
     {
-        SendData(client,"221 BYE")
-        break;
+        SendData(client,"221 BYE");
+        return 0;
     }
-    //end send recieve area
+    //end send receive area
 
     dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
     if(dwWaitResult == WAIT_OBJECT_0)
     {
         //write the email down
-        fin.open("master_baffer.woopsy", ios::out | ios::append);        
+        fin.open("master_baffer.woopsy", ios::app);
         fin << completeMessage.str() << endl;
         fin.close();
     }
@@ -200,14 +201,16 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 
 DWORD WINAPI fileThread(LPVOID lpParam)
 {
-    clientAndDns *temp = (clientAndDns*) lpParam;
-    SOCKET dns = temp->dns;
-
+    clientAndDns *temp2 = (clientAndDns*) lpParam;
+    SOCKET dns = temp2->dns;
+    string temp, userName, user;
+    stringstream toFile;
+    bool forward;
     DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
     if(dwWaitResult == WAIT_OBJECT_0)
     {
         //we have control of the file now to read
-        fin.open("master_baffer.woopsy", ios::in)
+        fstream fin("master_baffer.woopsy", ios::in);
         getline(fin, temp);
         if (temp == "True")
             forward = true;
@@ -235,7 +238,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
         {
             if (userName == "alex" || userName == "dan" || userName == "drew" || userName == "scott")
             {
-                fin.open(user + ".txt", ios::out | ios::app)
+                fin.open((userName + ".txt").c_str(), ios::app);
                 fin << toFile.str();
                 fin.close();
             }
@@ -251,6 +254,8 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             if(dwWaitResult == WAIT_OBJECT_0)
             {
                 //dns stuff after we parse the to line
+            	string forwardDomain;
+            	//TODO: Fill in forwardDomain
                 SendData(dns,"who " + forwardDomain);
                 string response;
                 RecvData(dns,response);
