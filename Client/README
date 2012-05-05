@@ -1,0 +1,1 @@
+compile with the command g++ *.cpp -o client.exe -l ws2_32 -l gdi32
