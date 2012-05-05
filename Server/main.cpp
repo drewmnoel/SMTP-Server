@@ -16,9 +16,7 @@ using namespace std;
 
 SOCKET dnsRegister(string,string,string);
 DWORD WINAPI ClientThread(LPVOID lpParam);
-
-
-
+DWORD WINAPI fileThread(LPVOID lpParam);
 
 HANDLE dnsLock;
 HANDLE fileLock;
@@ -54,6 +52,10 @@ int main()
 
     HANDLE hThread;
     DWORD dwThreadId;
+
+    clientAndDns justDns;
+    justDns.dns = dnsSocket;
+    HANDLE readFile = CreateThread(NULL, 0, fileThread, (LPVOID)&justDns, 0, &dwThreadId);
 
     while(1)
     {
@@ -109,7 +111,62 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     SOCKET dns = temp->dns;
     string clientIP = temp->cIP;
 
-    SendData(client,"Im Alive");
-    printf("now im dead");
+    DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
+    if(dwWaitResult == WAIT_OBJECT_0)
+    {
+        SendData(dns,"who " + clientIP);
+        string response;
+        RecvData(dns,response);
+        bool fowarded = false;
+
+        if (response == "0"){
+            fowarded = true;
+        }
+        printf("message is from a %s\n",(fowarded) ? "server" : "client");
+    }
+    ReleaseMutex(dnsLock);
+
+    //here is where we send and recieve data from the client
+
+
+
+
+
+    //end send recieve area
+
+    dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
+    if(dwWaitResult == WAIT_OBJECT_0)
+    {
+        //write the email down
+    }
+    ReleaseMutex(fileLock);
+
     return 0;
+}
+
+DWORD WINAPI fileThread(LPVOID lpParam)
+{
+    clientAndDns *temp = (clientAndDns*) lpParam;
+    SOCKET dns = temp->dns;
+
+    DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
+    if(dwWaitResult == WAIT_OBJECT_0)
+    {
+        //we have control of the file now to read and shit
+
+        DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
+        if(dwWaitResult == WAIT_OBJECT_0)
+        {
+            //dns stuff after we parse the to line
+            //SendData(dns,"who " + Domain);
+            //string response;
+            //RecvData(dns,response);
+            //check if its an ip or an invalid address and cant sent it
+        }
+        ReleaseMutex(dnsLock);
+
+        //now that we have an ip we can continue or we can end it here if invalid or whatever
+
+    }
+    ReleaseMutex(fileLock);
 }
