@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <windows.h>
+#include <sstream>
+#include <regex>
 #include "Socket.h"
 
 #define DNS_NAME        "servera"
@@ -20,6 +22,9 @@ DWORD WINAPI fileThread(LPVOID lpParam);
 
 HANDLE dnsLock;
 HANDLE fileLock;
+
+string registered_name;
+int Message_Queue = 0;
 
 struct clientAndDns
 {
@@ -98,18 +103,25 @@ SOCKET dnsRegister(string ip,string name, string backup)
             exit(1);
         }
         else{
+            registered_name = DNS_NAME_BACKUP;
             return temp;
         }
     }
+    registered_name = DNS_NAME;
     return temp;
 }
 
 DWORD WINAPI ClientThread(LPVOID lpParam)
 {
+    fstream fin; 
     clientAndDns *temp = (clientAndDns*) lpParam;
     SOCKET client = temp->client;
     SOCKET dns = temp->dns;
     string clientIP = temp->cIP;
+    regex from("MAIL FROM:<[\\w.]+@[\\w.]+>");
+    regex to("RCPT TO:<[\\w.]+@[\\w.]+>");
+
+    stringstream completeMessage;
 
     DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
     if(dwWaitResult == WAIT_OBJECT_0)
@@ -127,17 +139,58 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     ReleaseMutex(dnsLock);
 
     //here is where we send and recieve data from the client
-
-
-
-
-
+    SendData(client,"220 " + registered_name + " ESMTP Postfix");
+    string data = "";
+    RecvData(client,data);
+    if(data.substr(0,4) != "HELO")
+    {
+        SendData(client,"221");
+        break;
+    }
+    SendData(client,"250 Hello " + data.substr(5) + ", I am glad to meet you");
+    RecvData(client,data);
+    while(data != "DATA")
+    {
+        if(regex_match(data,from))
+        {
+            completeMessage << data << endl;
+            SendData(client,"250 OK");
+        }
+        else if(regex_match(data,to))
+        {
+            completeMessage << data << endl;
+            SendData(client,"250 OK");
+        }
+        else
+        {
+            SendData(client,"500 Command Syntax Error");
+        }
+        RecvData(client,data);
+    }
+    SendData(client,"354 End data with <CR><LF>.<CR><LF>");
+    completeMessage << data << endl;
+    while (data != ".")
+    {
+        RecvData(client,data);
+        completeMessage << data;
+    }
+    completeMessage << endl << "." << endl;
+    SendData(client,"250 OK: queued as " + ++Message_Queue);
+    RecvData(client,data);
+    if(data == "QUIT")
+    {
+        SendData(client,"221 BYE")
+        break;
+    }
     //end send recieve area
 
     dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
     if(dwWaitResult == WAIT_OBJECT_0)
     {
         //write the email down
+        fin.open("master_baffer.woopsy", ios::out | ios::append);        
+        fin << completeMessage.str() << endl;
+        fin.close();
     }
     ReleaseMutex(fileLock);
 
@@ -152,21 +205,60 @@ DWORD WINAPI fileThread(LPVOID lpParam)
     DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
     if(dwWaitResult == WAIT_OBJECT_0)
     {
-        //we have control of the file now to read and shit
-
-        DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
-        if(dwWaitResult == WAIT_OBJECT_0)
+        //we have control of the file now to read
+        fin.open("master_baffer.woopsy", ios::in)
+        getline(fin, temp);
+        if (temp == "True")
+            forward = true;
+        else
+            forward = false;
+        toFile << temp << endl;
+            
+        getline(fin, temp);
+        toFile << temp << endl;
+            
+        while (temp != "DATA")
         {
-            //dns stuff after we parse the to line
-            //SendData(dns,"who " + Domain);
-            //string response;
-            //RecvData(dns,response);
-            //check if its an ip or an invalid address and cant sent it
+            getline(fin, temp);
+            toFile << temp << endl;
         }
-        ReleaseMutex(dnsLock);
+        while (temp != ".")
+        {
+            getline(fin, temp);
+            toFile << temp << endl;
+        }
+        fin.close();
+        temp = "";
+        
+        if (!forward)
+        {
+            if (userName == "alex" || userName == "dan" || userName == "drew" || userName == "scott")
+            {
+                fin.open(user + ".txt", ios::out | ios::app)
+                fin << toFile.str();
+                fin.close();
+            }
+            else
+            {
+                cerr << "No user \"" << userName << "\" exists on this server." << endl;
+            }
+        } 
+        //We are forwarding the message
+        else
+        {
+            DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
+            if(dwWaitResult == WAIT_OBJECT_0)
+            {
+                //dns stuff after we parse the to line
+                SendData(dns,"who " + forwardDomain);
+                string response;
+                RecvData(dns,response);
+                //check if its an ip or an invalid address and cannot sent it
+            }
+            ReleaseMutex(dnsLock);
 
-        //now that we have an ip we can continue or we can end it here if invalid or whatever
-
+            //now that we have an ip we can continue or we can end it here if invalid or whatever 
+        }
     }
     ReleaseMutex(fileLock);
 }
