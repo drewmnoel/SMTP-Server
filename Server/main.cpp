@@ -8,12 +8,8 @@
 #include <ctime>
 #include <fstream>
 #include "Socket.h"
+#include "iniReader.h"
 
-#define DNS_NAME        "servera"
-#define DNS_NAME_BACKUP "server1"
-#define DNS_IP          "129.21.112.89"
-#define DNS_PORT        53
-#define PORT            25
 //#define MESSAGE_SIZE
 
 using namespace std;
@@ -36,8 +32,21 @@ struct clientAndDns
 	SOCKET dns;
 };
 
+string DNS_NAME_BACKUP;
+string DNS_NAME;
+string DNS_IP;
+int DNS_PORT;
+int PORT;
+
 int main()
 {
+	parseIniFile("sample.ini");
+
+	DNS_NAME_BACKUP = getOptionToString("DNS_NAME_BACKUP");
+	DNS_NAME = getOptionToString("DNS_NAME");
+	DNS_IP = getOptionToString("DNS_IP");
+	DNS_PORT = getOptionToInt("DNS_PORT");
+	PORT = getOptionToInt("PORT");
 
 	//register dns name and keep socket open
 	SOCKET dnsSocket = dnsRegister(DNS_IP, DNS_NAME, DNS_NAME_BACKUP);
