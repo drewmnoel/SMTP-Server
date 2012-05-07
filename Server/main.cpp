@@ -155,8 +155,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	SOCKET client = temp->client;
 	SOCKET dns = temp->dns;
 	string clientIP = temp->cIP;
-	regex from("MAIL FROM:<[\\w.]+@[\\w.]+>", regex::extended);
-	regex to("RCPT TO:<[\\w.]+@[\\w.]+>", regex::extended);
+	regex from("MAIL FROM:<.+@.+>.*");
+	regex to("RCPT TO:<.+@.+>.*");
     bool validRelay;
 	stringstream completeMessage;
 
