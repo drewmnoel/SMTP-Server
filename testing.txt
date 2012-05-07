@@ -1,0 +1,3 @@
+This is a text file that I made in order to test Git's sensitivity.
+
+This is yet again another test.
