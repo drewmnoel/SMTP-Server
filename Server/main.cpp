@@ -87,7 +87,7 @@ int main()
 		//Set up a client thread
 		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
 				&dwThreadId);
-		eventLog("Started thread " + GetCurrentThreadId() + " at " + temp.cIP); 
+		eventLog("Started thread " + GetCurrentThreadId(), temp.cIP); 
 		if (hThread == NULL)
 		{
 			printf("CreateThread() failed: %d\n", (int) GetLastError());
@@ -109,13 +109,13 @@ SOCKET dnsRegister(string ip, string name, string backup)
 
 	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
-	eventLog("Sent iam " + name + "to dns server");
+	eventLog("Sent iam " + name + " to dns server");
 	RecvData(temp, response);
 	if (response == "5")
 	{
 		//Send backup request to DNS server
 		cout << "Name already taken. Trying backup name" << endl;
-		eventLog("Name (" + name + ") already taken. Trying backup name");
+		eventLog("Name \"" + name + "\" already taken. Trying backup name");
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
@@ -186,20 +186,20 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		return 0;
 	}
 	SendData(client, "250 Hello " + data.substr(5) + ", I am glad to meet you");
-	eventLog("250 Hello " + data.substr(5) + ", I am glad to meet you");
+	eventLog("250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
     RecvData(client, data);
 	while (data != "DATA")
 	{
 		if (regex_match(data, from))
 		{
 			completeMessage << data << endl;
-			eventLog(client, "FROM 250 OK");
+			eventLog("FROM 250 OK");
 			SendData(client, "250 OK");
 		}
 		else if (regex_match(data, to))
 		{
 			completeMessage << data << endl;
-			eventLog(client, "RCPT 250 OK");
+			eventLog("RCPT 250 OK");
 			SendData(client, "250 OK");
 		}
 		else
@@ -214,7 +214,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	completeMessage << data << endl;
 	while (data != ".")
 	{
-        eventLog("Receiving data \"" + data + "\" from " + clientIP);
+        eventLog("Receiving data \"" + data + "\"", clientIP);
 		RecvData(client, data);
 		completeMessage << data;
 	}
@@ -353,7 +353,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 //Parameters: Info to be logged
 //Returns: none
 //Purpose: Keep a log of all server activities
-void eventLog(string info)
+void eventLog(string info, ip)
 {
     char dia[10]; //A buffer to store the date
     char hora[10]; //A buffer to store the time
@@ -369,9 +369,8 @@ void eventLog(string info)
              << "\",\""
              << ip
              << "\",\""
-             << port; 
-             << "\",\""
              << message
              << "\"\n";
         fout.close();
     }
+}
