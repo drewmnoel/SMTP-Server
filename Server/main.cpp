@@ -19,7 +19,6 @@ DWORD WINAPI ClientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
 void eventLog(string info, string ip);
 
-
 HANDLE dnsLock;
 HANDLE fileLock;
 
@@ -42,7 +41,7 @@ int PORT;
 int main()
 {
 	parseIniFile("sample.ini");
-
+    eventLog("Server settings loaded from config", "0.0.0.0");
 	DNS_NAME_BACKUP = getOptionToString("DNS_NAME_BACKUP");
 	DNS_NAME = getOptionToString("DNS_NAME");
 	DNS_IP = getOptionToString("DNS_IP");
@@ -58,17 +57,21 @@ int main()
 	{
 		return (1);
 	}
+	eventLog("Created DNS mutex", "0.0.0.0");
+    	
 	fileLock = CreateMutex(NULL, FALSE, NULL);
 	if (fileLock == NULL)
 	{
 		return (1);
 	}
-
+	eventLog("Created file mutex", "0.0.0.0");
+	
 	//Set up a listening socket
 	SOCKET server = setUpSocket();
 	Bind(server, PORT);
 	Listen(server, 99);
-
+    eventLog("Successfully set up server socket. Listening", "0.0.0.0");
+    
 	HANDLE hThread;
 	DWORD dwThreadId;
 
@@ -88,12 +91,14 @@ int main()
 		//Set up a client thread
 		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
 				&dwThreadId);
-		eventLog("Started thread " + GetCurrentThreadId(), temp.cIP);
 		if (hThread == NULL)
 		{
+            eventLog("CreateThread() failed: %d\n" + (int) GetLastError(), temp.cIP);
 			printf("CreateThread() failed: %d\n", (int) GetLastError());
 			break;
 		}
+		else
+		    eventLog("Started thread " + GetCurrentThreadId(), temp.cIP);
 		CloseHandle(hThread);
 	}
 
@@ -110,13 +115,13 @@ SOCKET dnsRegister(string ip, string name, string backup)
 
 	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
-	eventLog("Sent iam " + name + " to dns server",ip);
+	eventLog("Sent iam " + name + " to dns server", ip);
 	RecvData(temp, response);
 	if (response == "5")
 	{
 		//Send backup request to DNS server
 		cout << "Name already taken. Trying backup name" << endl;
-		eventLog("Name \"" + name + "\" already taken. Trying backup name", ip);
+		eventLog("Name \"" + name + "\" already taken. Trying backup name", "0.0.0.0");
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
@@ -124,21 +129,21 @@ SOCKET dnsRegister(string ip, string name, string backup)
 		{
 		    //Kill if both names are taken
 			cout << "Both names taken quitting server" << endl;
-			eventLog("Both names taken. Quitting server.","0.0.0.0");
+			eventLog("Both names taken. Quitting server.", "0.0.0.0");
 			exit(1);
 		}
 		else
 		{
 			//Register backup
             cout << "Using backup name" << endl;
-            eventLog("Using backup name","0.0.0.0");
+            eventLog("Using backup name", "0.0.0.0");
 			registered_name = DNS_NAME_BACKUP;
 			return temp;
 		}
 	}
 	//Register primary
 	cout << "First name registered successfully" << endl;
-    eventLog("First name registered successfully","0.0.0.0");
+    eventLog("First name registered successfully", "0.0.0.0");
 	registered_name = DNS_NAME;
 	return temp;
 }
@@ -150,8 +155,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	SOCKET client = temp->client;
 	SOCKET dns = temp->dns;
 	string clientIP = temp->cIP;
-	regex from("MAIL FROM:<[\\w.]+@[\\w.]+>");
-	regex to("RCPT TO:<[\\w.]+@[\\w.]+>");
+	regex from("MAIL FROM:<[\\w.]+@[\\w.]+>", regex::extended);
+	regex to("RCPT TO:<[\\w.]+@[\\w.]+>", regex::extended);
     bool validRelay;
 	stringstream completeMessage;
 
@@ -160,6 +165,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	{
 		//Test IP against DNS
 		SendData(dns, "who " + clientIP);
+		eventLog("Sent \"who " + clientIP + "\"", DNS_IP);
 		string response;
 		RecvData(dns, response);
 		bool forwarded = false;
@@ -188,44 +194,46 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		return 0;
 	}
 	SendData(client, "250 Hello " + data.substr(5) + ", I am glad to meet you");
-	eventLog("250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
+	eventLog("Sent 250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
     RecvData(client, data);
 	while (data != "DATA")
 	{
 		if (regex_match(data, from))
 		{
 			completeMessage << data << endl;
-			eventLog("FROM 250 OK",clientIP);
+			eventLog("Sent FROM 250 OK", clientIP);
 			SendData(client,"250 OK");
 		}
 		else if (regex_match(data, to))
 		{
 			completeMessage << data << endl;
-			eventLog("RCPT 250 OK",clientIP);
+			eventLog("Sent RCPT 250 OK", clientIP);
 			SendData(client, "250 OK");
 		}
 		else
 		{
 			SendData(client, "500 Command Syntax Error");
-			eventLog("500 Command Syntax Error",clientIP);
+			eventLog("Sent 500 Command Syntax Error", clientIP);
 		}
 		RecvData(client, data);
 	}
 	SendData(client, "354 End data with <CR><LF>.<CR><LF>");
-	eventLog("354 End data with <CR><LF>.<CR><LF>",clientIP);
+	eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
 	completeMessage << data << endl;
 	while (data != ".")
 	{
-        eventLog("Receiving data \"" + data + "\"", clientIP);
+        eventLog("Received data \"" + data + "\"", clientIP);
 		RecvData(client, data);
 		completeMessage << data;
 	}
 	completeMessage << endl << "." << endl;
 	SendData(client, "250 OK: queued as " + ++Message_Queue);
+	eventLog("Sent 250 OK: queued as " + ++Message_Queue, clientIP);
 	RecvData(client, data);
 	if (data == "QUIT")
 	{
 		SendData(client, "221 BYE");
+		eventLog("Sent 221 BYE", clientIP);
 		return 0;
 	}
 	//end send receive area
@@ -258,13 +266,15 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 	{
 		//we have control of the file now to read
 		fstream fin("master_baffer.woopsy", ios::in);
+		//Get yje first line which tells us if it's a client or not
 		getline(fin, clientData);
 		if (clientData == "True")
 			forward = true;
 		else
 			forward = false;
+		//Store in the stringstream
 		toFile << clientData << endl;
-
+        //Get the next line which would be the TO & store
 		getline(fin, clientData);
 		toFile << clientData << endl;
 
@@ -280,14 +290,17 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 		}
 		fin.close();
 		clientData = "";
-
+        
+        //The user is local
 		if (!forward)
 		{
 			if (userName == "alex" || userName == "dan" || userName == "drew"
 					|| userName == "scott")
 			{
+                //Open the correct user file and append the string stream into it
 				fin.open((userName + ".txt").c_str(), ios::app);
 				fin << toFile.str();
+                eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");				
 				fin.close();
 			}
 			else
@@ -310,8 +323,11 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
+				
+				eventLog("Attempting to forward message", response); 
 			    if (response == "3")
                 {
+                    eventLog("Domain not registered", "0.0.0.0");              
                		cout << "Domain not registered\n";
                		//*Put it at the end of the file
                     validRelay = false;
@@ -319,6 +335,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             	}
 			    else if (response == "4")
                 {
+                    eventLog("DNS Bad Command", "0.0.0.0");
               		cout << "Bad command\n";
               		validRelay = false;
               		return 0;
@@ -364,7 +381,7 @@ void eventLog(string info, string ip)
     time_t hora; //A buffer to store the time
     fstream fout;
     fout.open("server_log.txt", ios::app);
-    time(&hora)
+    time(&hora);
     timeinfo = localtime(&hora);
     if (info != "")
     {
