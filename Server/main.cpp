@@ -360,16 +360,17 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 void eventLog(string info, string ip)
 {
     //time_t dia; //A buffer to store the date
+    struct tm * timeinfo;
     time_t hora; //A buffer to store the time
     fstream fout;
     fout.open("server_log.txt", ios::app);
+    time(&hora)
+    timeinfo = localtime(&hora);
     if (info != "")
     {
         fout.open("server_log.csv", ios::app);
         fout << "\""
-             //<< date(&dia)
-             << "\",\""
-             << time(&hora)
+             << (string)asctime(timeinfo)
              << "\",\""
              << ip
              << "\",\""
