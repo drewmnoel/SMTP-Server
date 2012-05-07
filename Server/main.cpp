@@ -165,7 +165,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	{
 		//Test IP against DNS
 		SendData(dns, "who " + clientIP);
-		eventLog("Sent \"who " + clientIP + "\""), DNS_IP);
+		eventLog("Sent \"who " + clientIP + "\"", DNS_IP);
 		string response;
 		RecvData(dns, response);
 		bool forwarded = false;
@@ -371,7 +371,7 @@ void eventLog(string info, string ip)
     time_t hora; //A buffer to store the time
     fstream fout;
     fout.open("server_log.txt", ios::app);
-    time(&hora)
+    time(&hora);
     timeinfo = localtime(&hora);
     if (info != "")
     {
