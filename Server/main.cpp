@@ -19,7 +19,6 @@ DWORD WINAPI ClientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
 void eventLog(string info, string ip);
 
-
 HANDLE dnsLock;
 HANDLE fileLock;
 
@@ -58,17 +57,21 @@ int main()
 	{
 		return (1);
 	}
+	eventLog("Created DNS mutex", "0.0.0.0");
+    	
 	fileLock = CreateMutex(NULL, FALSE, NULL);
 	if (fileLock == NULL)
 	{
 		return (1);
 	}
-
+	eventLog("Created file mutex", "0.0.0.0");
+	
 	//Set up a listening socket
 	SOCKET server = setUpSocket();
 	Bind(server, PORT);
 	Listen(server, 99);
-
+    eventLog("Successfully set up server socket. Listening", "0.0.0.0");
+    
 	HANDLE hThread;
 	DWORD dwThreadId;
 
@@ -88,12 +91,14 @@ int main()
 		//Set up a client thread
 		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
 				&dwThreadId);
-		eventLog("Started thread " + GetCurrentThreadId(), temp.cIP);
 		if (hThread == NULL)
 		{
+            eventLog("CreateThread() failed: %d\n" + (int) GetLastError(), temp.cIP);
 			printf("CreateThread() failed: %d\n", (int) GetLastError());
 			break;
 		}
+		else
+		    eventLog("Started thread " + GetCurrentThreadId(), temp.cIP);
 		CloseHandle(hThread);
 	}
 
@@ -110,13 +115,13 @@ SOCKET dnsRegister(string ip, string name, string backup)
 
 	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
-	eventLog("Sent iam " + name + " to dns server",ip);
+	eventLog("Sent iam " + name + " to dns server", ip);
 	RecvData(temp, response);
 	if (response == "5")
 	{
 		//Send backup request to DNS server
 		cout << "Name already taken. Trying backup name" << endl;
-		eventLog("Name \"" + name + "\" already taken. Trying backup name", ip);
+		eventLog("Name \"" + name + "\" already taken. Trying backup name", "0.0.0.0");
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
@@ -124,21 +129,21 @@ SOCKET dnsRegister(string ip, string name, string backup)
 		{
 		    //Kill if both names are taken
 			cout << "Both names taken quitting server" << endl;
-			eventLog("Both names taken. Quitting server.","0.0.0.0");
+			eventLog("Both names taken. Quitting server.", "0.0.0.0");
 			exit(1);
 		}
 		else
 		{
 			//Register backup
             cout << "Using backup name" << endl;
-            eventLog("Using backup name","0.0.0.0");
+            eventLog("Using backup name", "0.0.0.0");
 			registered_name = DNS_NAME_BACKUP;
 			return temp;
 		}
 	}
 	//Register primary
 	cout << "First name registered successfully" << endl;
-    eventLog("First name registered successfully","0.0.0.0");
+    eventLog("First name registered successfully", "0.0.0.0");
 	registered_name = DNS_NAME;
 	return temp;
 }
@@ -160,6 +165,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	{
 		//Test IP against DNS
 		SendData(dns, "who " + clientIP);
+		eventLog("Sent \"who " + clientIP + "\""), DNS_IP);
 		string response;
 		RecvData(dns, response);
 		bool forwarded = false;
@@ -179,7 +185,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 
 	//here is where we send and recieve data from the client
 	SendData(client, "220 " + registered_name + " ESMTP Postfix");
-	SendData("220 " + registered_name + " ESMTP Postfix", ip);	
+	eventLog("220 " + registered_name + " ESMTP Postfix", ip);	
     string data = "";
 	RecvData(client, data);
 	if (data.substr(0, 4) != "HELO")
@@ -195,19 +201,19 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		if (regex_match(data, from))
 		{
 			completeMessage << data << endl;
-			eventLog("FROM 250 OK",clientIP);
+			eventLog("FROM 250 OK", clientIP);
 			SendData(client,"250 OK");
 		}
 		else if (regex_match(data, to))
 		{
 			completeMessage << data << endl;
-			eventLog("RCPT 250 OK",clientIP);
+			eventLog("RCPT 250 OK", clientIP);
 			SendData(client, "250 OK");
 		}
 		else
 		{
 			SendData(client, "500 Command Syntax Error");
-			eventLog("500 Command Syntax Error",clientIP);
+			eventLog("500 Command Syntax Error", clientIP);
 		}
 		RecvData(client, data);
 	}
@@ -226,6 +232,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	if (data == "QUIT")
 	{
 		SendData(client, "221 BYE");
+		eventLog("221 BYE", clientIP);
 		return 0;
 	}
 	//end send receive area
