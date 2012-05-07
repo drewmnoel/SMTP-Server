@@ -58,20 +58,20 @@ int main()
 		return (1);
 	}
 	eventLog("Created DNS mutex", "0.0.0.0");
-    	
+
 	fileLock = CreateMutex(NULL, FALSE, NULL);
 	if (fileLock == NULL)
 	{
 		return (1);
 	}
 	eventLog("Created file mutex", "0.0.0.0");
-	
+
 	//Set up a listening socket
 	SOCKET server = setUpSocket();
 	Bind(server, PORT);
 	Listen(server, 99);
     eventLog("Successfully set up server socket. Listening", "0.0.0.0");
-    
+
 	HANDLE hThread;
 	DWORD dwThreadId;
 
@@ -266,7 +266,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 	{
 		//we have control of the file now to read
 		fstream fin("master_baffer.woopsy", ios::in);
-		//Get yje first line which tells us if it's a client or not
+		//Get the first line which tells us if it's a client or not
 		getline(fin, clientData);
 		if (clientData == "True")
 			forward = true;
@@ -278,19 +278,22 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 		getline(fin, clientData);
 		toFile << clientData << endl;
 
+        //Keep reading in until you get to DATA
 		while (clientData != "DATA")
 		{
 			getline(fin, clientData);
 			toFile << clientData << endl;
 		}
+		//Keep reading in until the end of message marker
 		while (clientData != ".")
 		{
 			getline(fin, clientData);
 			toFile << clientData << endl;
 		}
+		//Close the file and clear the clientData buffer
 		fin.close();
 		clientData = "";
-        
+
         //The user is local
 		if (!forward)
 		{
@@ -300,7 +303,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
                 //Open the correct user file and append the string stream into it
 				fin.open((userName + ".txt").c_str(), ios::app);
 				fin << toFile.str();
-                eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");				
+                eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");
 				fin.close();
 			}
 			else
@@ -323,11 +326,11 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
-				
-				eventLog("Attempting to forward message", response); 
+
+				eventLog("Attempting to forward message", response);
 			    if (response == "3")
                 {
-                    eventLog("Domain not registered", "0.0.0.0");              
+                    eventLog("Domain not registered", "0.0.0.0");
                		cout << "Domain not registered\n";
                		//*Put it at the end of the file
                     validRelay = false;
