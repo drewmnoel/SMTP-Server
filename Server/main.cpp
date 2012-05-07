@@ -179,7 +179,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 
 	//here is where we send and recieve data from the client
 	SendData(client, "220 " + registered_name + " ESMTP Postfix");
-	SendData("220 " + registered_name + " ESMTP Postfix", ip);	
+	eventLog("220 " + registered_name + " ESMTP Postfix",clientIP);
     string data = "";
 	RecvData(client, data);
 	if (data.substr(0, 4) != "HELO")
@@ -306,7 +306,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				//dns stuff after we parse the to line
 				string forwardDomain;
 				//TODO: Fill in forwardDomain
-				eventLog("Sent \"who " + forwardDomain + "\"", ip)
+				eventLog("Sent \"who " + forwardDomain + "\"", DNS_IP);
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
@@ -350,6 +350,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 		}
 	}
 	ReleaseMutex(fileLock);
+//	return;
 }
 
 //name: eventLog
@@ -358,17 +359,17 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 //Purpose: Keep a log of all server activities
 void eventLog(string info, string ip)
 {
-    char dia[10]; //A buffer to store the date
-    char hora[10]; //A buffer to store the time
+    //time_t dia; //A buffer to store the date
+    time_t hora; //A buffer to store the time
     fstream fout;
     fout.open("server_log.txt", ios::app);
     if (info != "")
     {
         fout.open("server_log.csv", ios::app);
         fout << "\""
-             << _strdate(dia)
+             //<< date(&dia)
              << "\",\""
-             << _strtime(hora)
+             << time(&hora)
              << "\",\""
              << ip
              << "\",\""
