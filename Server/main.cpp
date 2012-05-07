@@ -17,7 +17,7 @@ using namespace std;
 SOCKET dnsRegister(string, string, string);
 DWORD WINAPI ClientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
-void eventLog(string info);
+void eventLog(string info, string ip);
 
 HANDLE dnsLock;
 HANDLE fileLock;
@@ -115,7 +115,7 @@ SOCKET dnsRegister(string ip, string name, string backup)
 	{
 		//Send backup request to DNS server
 		cout << "Name already taken. Trying backup name" << endl;
-		eventLog("Name \"" + name + "\" already taken. Trying backup name");
+		eventLog("Name \"" + name + "\" already taken. Trying backup name", ip);
 		response = "";
 		SendData(temp, "iam " + backup);
 		RecvData(temp, response);
@@ -123,14 +123,14 @@ SOCKET dnsRegister(string ip, string name, string backup)
 		{
 		    //Kill if both names are taken
 			cout << "Both names taken quitting server" << endl;
-			eventLog("Both names taken. Quitting server.");
+			eventLog("Both names taken. Quitting server.", ip);
 			exit(1);
 		}
 		else
 		{
 			//Register backup
             cout << "Using backup name" << endl;
-            eventLog("Using backup name");
+            eventLog("Using backup name", ip);
 			registered_name = DNS_NAME_BACKUP;
 			return temp;
 		}
@@ -178,7 +178,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 
 	//here is where we send and recieve data from the client
 	SendData(client, "220 " + registered_name + " ESMTP Postfix");
-	string data = "";
+	SendData("220 " + registered_name + " ESMTP Postfix", ip);	
+    string data = "";
 	RecvData(client, data);
 	if (data.substr(0, 4) != "HELO")
 	{
@@ -304,6 +305,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				//dns stuff after we parse the to line
 				string forwardDomain;
 				//TODO: Fill in forwardDomain
+				eventLog("Sent \"who " + forwardDomain + "\"", ip)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
@@ -353,7 +355,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 //Parameters: Info to be logged
 //Returns: none
 //Purpose: Keep a log of all server activities
-void eventLog(string info, ip)
+void eventLog(string info, string ip)
 {
     char dia[10]; //A buffer to store the date
     char hora[10]; //A buffer to store the time
