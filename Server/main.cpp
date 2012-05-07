@@ -41,7 +41,7 @@ int PORT;
 int main()
 {
 	parseIniFile("sample.ini");
-
+    eventLog("Server settings loaded from config", "0.0.0.0");
 	DNS_NAME_BACKUP = getOptionToString("DNS_NAME_BACKUP");
 	DNS_NAME = getOptionToString("DNS_NAME");
 	DNS_IP = getOptionToString("DNS_IP");
@@ -194,45 +194,46 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		return 0;
 	}
 	SendData(client, "250 Hello " + data.substr(5) + ", I am glad to meet you");
-	eventLog("250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
+	eventLog("Sent 250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
     RecvData(client, data);
 	while (data != "DATA")
 	{
 		if (regex_match(data, from))
 		{
 			completeMessage << data << endl;
-			eventLog("FROM 250 OK", clientIP);
+			eventLog("Sent FROM 250 OK", clientIP);
 			SendData(client,"250 OK");
 		}
 		else if (regex_match(data, to))
 		{
 			completeMessage << data << endl;
-			eventLog("RCPT 250 OK", clientIP);
+			eventLog("Sent RCPT 250 OK", clientIP);
 			SendData(client, "250 OK");
 		}
 		else
 		{
 			SendData(client, "500 Command Syntax Error");
-			eventLog("500 Command Syntax Error", clientIP);
+			eventLog("Sent 500 Command Syntax Error", clientIP);
 		}
 		RecvData(client, data);
 	}
 	SendData(client, "354 End data with <CR><LF>.<CR><LF>");
-	eventLog("354 End data with <CR><LF>.<CR><LF>",clientIP);
+	eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
 	completeMessage << data << endl;
 	while (data != ".")
 	{
-        eventLog("Receiving data \"" + data + "\"", clientIP);
+        eventLog("Received data \"" + data + "\"", clientIP);
 		RecvData(client, data);
 		completeMessage << data;
 	}
 	completeMessage << endl << "." << endl;
 	SendData(client, "250 OK: queued as " + ++Message_Queue);
+	eventLog("Sent 250 OK: queued as " + ++Message_Queue, clientIP);
 	RecvData(client, data);
 	if (data == "QUIT")
 	{
 		SendData(client, "221 BYE");
-		eventLog("221 BYE", clientIP);
+		eventLog("Sent 221 BYE", clientIP);
 		return 0;
 	}
 	//end send receive area
@@ -265,13 +266,15 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 	{
 		//we have control of the file now to read
 		fstream fin("master_baffer.woopsy", ios::in);
+		//Get yje first line which tells us if it's a client or not
 		getline(fin, clientData);
 		if (clientData == "True")
 			forward = true;
 		else
 			forward = false;
+		//Store in the stringstream
 		toFile << clientData << endl;
-
+        //Get the next line which would be the TO & store
 		getline(fin, clientData);
 		toFile << clientData << endl;
 
@@ -287,14 +290,17 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 		}
 		fin.close();
 		clientData = "";
-
+        
+        //The user is local
 		if (!forward)
 		{
 			if (userName == "alex" || userName == "dan" || userName == "drew"
 					|| userName == "scott")
 			{
+                //Open the correct user file and append the string stream into it
 				fin.open((userName + ".txt").c_str(), ios::app);
 				fin << toFile.str();
+                eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");				
 				fin.close();
 			}
 			else
@@ -317,8 +323,11 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
+				
+				eventLog("Attempting to forward message", response); 
 			    if (response == "3")
                 {
+                    eventLog("Domain not registered", "0.0.0.0");              
                		cout << "Domain not registered\n";
                		//*Put it at the end of the file
                     validRelay = false;
@@ -326,6 +335,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             	}
 			    else if (response == "4")
                 {
+                    eventLog("DNS Bad Command", "0.0.0.0");
               		cout << "Bad command\n";
               		validRelay = false;
               		return 0;
