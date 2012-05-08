@@ -16,7 +16,7 @@ using namespace std;
 
 //start prototypes
 SOCKET dnsRegister(string, string, string);
-DWORD WINAPI ClientThread(LPVOID lpParam);
+DWORD WINAPI clientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
 void eventLog(string info, string ip);
 //end prototypes
@@ -105,7 +105,7 @@ int main()
 		temp.dns = dnsSocket;
 
 		//Set up a client thread
-		if(CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0, &dwThreadId) == NULL)
+		if(CreateThread(NULL, 0, clientThread, (LPVOID) &temp, 0, &dwThreadId) == NULL)
 		{
             eventLog("CreateThread() failed: " + (int)GetLastError(), temp.cIP);
 			printf("CreateThread() failed: %d\n", (int)GetLastError());
@@ -171,7 +171,7 @@ SOCKET dnsRegister(string ip, string name, string backup)
     return temp;
 }
 
-DWORD WINAPI ClientThread(LPVOID lpParam)
+DWORD WINAPI clientThread(LPVOID lpParam)
 {
     //put the struct passed into vars we can use
 	clientAndDns *temp = (clientAndDns*) lpParam;
@@ -180,7 +180,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	string clientIP = temp->cIP;
 
 	//other vars we need
-    bool validRelay;
+    //bool validRelay;
 	stringstream completeMessage;
 	string response;
 	bool forwarded = false;
@@ -280,7 +280,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	{
 		//write the email down
 		fstream fin;
-		fin.open("master_baffer.woopsy", ios::out | ios::app);
+		fin.open("master_baffer.woopsy", ios::app);
 		fin << completeMessage.str() << endl;
 		fin.close();
 	}
@@ -394,7 +394,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
             	}
             	else
                 {
-            	    SOCKET relay;
+            	    SOCKET relay = SOCKET_ERROR;
                     if (!Connect(relay,response,PORT)) {
                  	   cout << "Connection to relay failed\n";
                  	   validRelay = true;
@@ -419,7 +419,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 		}
 	}
 	ReleaseMutex(fileLock);
-//	return;
+	return 0;
 }
 
 //name: eventLog
