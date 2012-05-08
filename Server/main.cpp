@@ -210,6 +210,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	}
 	ReleaseMutex(dnsLock);
 
+    completeMessage << ((forwarded) ? "true\n" : "false\n");
+
 	//here is where we send and recieve data from the client
 	SendData(client, "220 " + registered_name + " ESMTP Postfix");
 	eventLog("220 " + registered_name + " ESMTP Postfix",clientIP);
@@ -276,6 +278,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 	{
 		//write the email down
+		fstream fin;
 		fin.open("master_baffer.woopsy", ios::out | ios::app);
 		fin << completeMessage.str() << endl;
 		fin.close();
@@ -298,8 +301,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 
 DWORD WINAPI fileThread(LPVOID lpParam)
 {
-	clientAndDns *temp2 = (clientAndDns*) lpParam;
-	SOCKET dns = temp2->dns;
+	clientAndDns *temp = (clientAndDns*) lpParam;
+	SOCKET dns = temp->dns;
 	string clientData, userName, user;
 	stringstream toFile;
 	bool forward;
