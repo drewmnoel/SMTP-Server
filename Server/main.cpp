@@ -263,7 +263,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
     completeMessage << (regex_match(data,(regex)"*\n") ? data : data + "\n");
     while (!regex_match(data,(regex)"\\.\n*"))
     {
-        eventLog("Received data \"" + data + "\"", clientIP);
+        eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", clientIP);
         if(!RecvData(client, data))
         {
             eventLog("client disconnect",clientIP);
@@ -271,8 +271,9 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
         }
         completeMessage << data;
     }
-    SendData(client, "250 OK: queued as " + (++Message_Queue));
-    eventLog("Sent 250 OK: queued as " + (++Message_Queue), clientIP);
+    Message_Queue += 1;
+    SendData(client, "250 OK: queued as " + Message_Queue);
+    eventLog("Sent 250 OK: queued as " + Message_Queue, clientIP);
 
     //write dat message down
     if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
