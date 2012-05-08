@@ -36,13 +36,27 @@ void SendData(SOCKET sock,std::string input)
     send(sock, buffer, strlen(buffer), 0);
 }
 
-void RecvData(SOCKET sock,std::string &input)
+bool RecvData(SOCKET sock,std::string &input)
 {
 	char buffer[STRLEN];
 	memset(buffer, 0, STRLEN);
 	int i = recv(sock, buffer, STRLEN, 0);
-    input.reserve(i);
-    input = buffer;
+    if (i == SOCKET_ERROR)
+    {
+//        SOCKADDR_IN gettingIP;
+//        gettingIP.sin_family = AF_INET;
+//        int size = sizeof(gettingIP);
+//        getpeername(sock,(SOCKADDR*)&gettingIP,&size);
+//        std::cout << "Client " << (std::string)inet_ntoa(gettingIP.sin_addr) << " disconnected\n";
+        std::cout << "client disconnected\n";
+        return false;
+    }
+    else
+    {
+        input.reserve(i);
+        input = buffer;
+        return true;
+    }
 }
 
 void CloseSocket(SOCKET &sock)

@@ -21,6 +21,7 @@ void eventLog(string info, string ip);
 
 HANDLE dnsLock;
 HANDLE fileLock;
+HANDLE eventLock;
 
 string registered_name;
 int Message_Queue = 0;
@@ -52,6 +53,12 @@ int main()
 	SOCKET dnsSocket = dnsRegister(DNS_IP, DNS_NAME, DNS_NAME_BACKUP);
 
 	//create mutex on dns socket
+	eventLock = CreateMutex(NULL, FALSE, NULL);
+	if (eventLock == NULL)
+	{
+		return (1);
+	}
+
 	dnsLock = CreateMutex(NULL, FALSE, NULL);
 	if (dnsLock == NULL)
 	{
@@ -78,8 +85,7 @@ int main()
 	//Set up a socket to the DNS server
 	clientAndDns justDns;
 	justDns.dns = dnsSocket;
-	HANDLE readFile = CreateThread(NULL, 0, fileThread, (LPVOID) &justDns, 0,
-			&dwThreadId);
+	//HANDLE readFile = CreateThread(NULL, 0, fileThread, (LPVOID) &justDns, 0, &dwThreadId);
 
 	while (1)
 	{
@@ -89,8 +95,7 @@ int main()
 		temp.dns = dnsSocket;
 
 		//Set up a client thread
-		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0,
-				&dwThreadId);
+		hThread = CreateThread(NULL, 0, ClientThread, (LPVOID) &temp, 0, &dwThreadId);
 		if (hThread == NULL)
 		{
             eventLog("CreateThread() failed: %d\n" + (int) GetLastError(), temp.cIP);
@@ -116,36 +121,42 @@ SOCKET dnsRegister(string ip, string name, string backup)
 	//Send domain request to DNS server
 	SendData(temp, "iam " + name);
 	eventLog("Sent iam " + name + " to dns server", ip);
-	RecvData(temp, response);
-	if (response == "5")
+	if(!RecvData(temp, response))
 	{
-		//Send backup request to DNS server
-		cout << "Name already taken. Trying backup name" << endl;
-		eventLog("Name \"" + name + "\" already taken. Trying backup name", "0.0.0.0");
-		response = "";
-		SendData(temp, "iam " + backup);
-		RecvData(temp, response);
-		if (response == "5")
-		{
-		    //Kill if both names are taken
-			cout << "Both names taken quitting server" << endl;
-			eventLog("Both names taken. Quitting server.", "0.0.0.0");
-			exit(1);
-		}
-		else
-		{
-			//Register backup
+	    exit(1);
+	}
+    if (response == "5")
+    {
+        //Send backup request to DNS server
+        cout << "Name already taken. Trying backup name" << endl;
+        eventLog("Name \"" + name + "\" already taken. Trying backup name", "0.0.0.0");
+        response = "";
+        SendData(temp, "iam " + backup);
+        if(!RecvData(temp, response))
+        {
+            exit(1);
+        }
+        if (response == "5")
+        {
+            //Kill if both names are taken
+            cout << "Both names taken quitting server" << endl;
+            eventLog("Both names taken. Quitting server.", "0.0.0.0");
+            exit(1);
+        }
+        else
+        {
+            //Register backup
             cout << "Using backup name" << endl;
             eventLog("Using backup name", "0.0.0.0");
-			registered_name = DNS_NAME_BACKUP;
-			return temp;
-		}
-	}
-	//Register primary
-	cout << "First name registered successfully" << endl;
+            registered_name = DNS_NAME_BACKUP;
+            return temp;
+        }
+    }
+    //Register primary
+    cout << "First name registered successfully" << endl;
     eventLog("First name registered successfully", "0.0.0.0");
-	registered_name = DNS_NAME;
-	return temp;
+    registered_name = DNS_NAME;
+    return temp;
 }
 
 DWORD WINAPI ClientThread(LPVOID lpParam)
@@ -155,8 +166,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	SOCKET client = temp->client;
 	SOCKET dns = temp->dns;
 	string clientIP = temp->cIP;
-	regex from("MAIL FROM:<.+@.+>.*");
-	regex to("RCPT TO:<.+@.+>.*");
+	//regex from("MAIL FROM:<.+@.+>\n*");
+	//regex to("RCPT TO:<.+@.+>\n*");
     bool validRelay;
 	stringstream completeMessage;
 
@@ -167,19 +178,23 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		SendData(dns, "who " + clientIP);
 		eventLog("Sent \"who " + clientIP + "\"", DNS_IP);
 		string response;
-		RecvData(dns, response);
-		bool forwarded = false;
-
-		//If 0, it's from a server, if not, it's from a client
-		if (response == "0")
+		if(!RecvData(dns, response))
 		{
-            eventLog("Message is from a server",clientIP);
-			forwarded = true;
+		    return 0;
 		}
-		if (forwarded == false)
-		    eventLog("Message is from a client",clientIP);
+        bool forwarded = false;
 
-		printf("message is from a %s\n", (forwarded) ? "server" : "client");
+        //If 0, it's from a server, if not, it's from a client
+        if (response == "0")
+        {
+            eventLog("Message is from a server",clientIP);
+            forwarded = true;
+        }
+        if (forwarded == false)
+        {
+            eventLog("Message is from a client",clientIP);
+        }
+        printf("message is from a %s\n", (forwarded) ? "server" : "client");
 	}
 	ReleaseMutex(dnsLock);
 
@@ -187,62 +202,73 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	SendData(client, "220 " + registered_name + " ESMTP Postfix");
 	eventLog("220 " + registered_name + " ESMTP Postfix",clientIP);
     string data = "";
-	RecvData(client, data);
-	if (data.substr(0, 4) != "HELO")
+	if(!RecvData(client, data))
 	{
-		SendData(client, "221");
-		return 0;
+        return 0;
 	}
-	SendData(client, "250 Hello " + data.substr(5) + ", I am glad to meet you");
-	eventLog("Sent 250 Hello " + data.substr(5) + ", I am glad to meet you", clientIP);
-    RecvData(client, data);
-	while (data != "DATA")
-	{
-		if (regex_match(data, from))
-		{
-			completeMessage << data << endl;
-			eventLog("Sent FROM 250 OK", clientIP);
-			SendData(client,"250 OK");
-		}
-		else if (regex_match(data, to))
-		{
-			completeMessage << data << endl;
-			eventLog("Sent RCPT 250 OK", clientIP);
-			SendData(client, "250 OK");
-		}
-		else
-		{
-			SendData(client, "500 Command Syntax Error");
-			eventLog("Sent 500 Command Syntax Error", clientIP);
-		}
-		RecvData(client, data);
-	}
-	SendData(client, "354 End data with <CR><LF>.<CR><LF>");
-	eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
-	completeMessage << data << endl;
-	while (data != ".")
-	{
+    if (!regex_match(data,(regex)"HELO .*\n*"))
+    {
+        SendData(client, "221 Closing Transmission Channel");
+        return 0;
+    }
+    SendData(client, "250 Hello " + ((data[(data.length()-1)] = '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you");
+    eventLog("Sent 250 Hello " + ((data[(data.length()-1)] = '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you", clientIP);
+    if(!RecvData(client, data))
+    {
+        return 0;
+    }
+    while (!regex_match(data,(regex)"DATA\n*"))
+    {
+        if (regex_match(data, (regex)"MAIL FROM:<.+@.+>\n*"))
+        {
+            completeMessage << data << endl;
+            eventLog("Sent FROM 250 OK", clientIP);
+            SendData(client,"250 OK");
+        }
+        else if (regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
+        {
+            completeMessage << data << endl;
+            eventLog("Sent RCPT 250 OK", clientIP);
+            SendData(client, "250 OK");
+        }
+        else
+        {
+            SendData(client, "500 Command Syntax Error");
+            eventLog("Sent 500 Command Syntax Error", clientIP);
+        }
+        if(!RecvData(client, data))
+        {
+            return 0;
+        }
+    }
+    SendData(client, "354 End data with <CR><LF>.<CR><LF>");
+    eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
+    completeMessage << data << endl;
+    while (!regex_match(data,(regex)"\\.\n*"))
+    {
         eventLog("Received data \"" + data + "\"", clientIP);
-		RecvData(client, data);
-		completeMessage << data;
-	}
-	completeMessage << endl << "." << endl;
-	SendData(client, "250 OK: queued as " + ++Message_Queue);
-	eventLog("Sent 250 OK: queued as " + ++Message_Queue, clientIP);
-	RecvData(client, data);
-	if (data == "QUIT")
-	{
-		SendData(client, "221 BYE");
-		eventLog("Sent 221 BYE", clientIP);
-		return 0;
-	}
-	//end send receive area
+        RecvData(client, data);
+        completeMessage << data;
+    }
+    completeMessage << endl << "." << endl;
+    SendData(client, "250 OK: queued as " + (++Message_Queue));
+    eventLog("Sent 250 OK: queued as " + (++Message_Queue), clientIP);
+    while(!regex_match(data,(regex)"QUIT\n*"))
+    {
+        if(!RecvData(client, data))
+        {
+            return 0;
+        }
+    }
+    SendData(client, "221 BYE");
+    eventLog("Sent 221 BYE", clientIP);
+    //end send receive area
 
 	dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
 	if (dwWaitResult == WAIT_OBJECT_0)
 	{
 		//write the email down
-		fin.open("master_baffer.woopsy", ios::app);
+		fin.open("master_baffer.woopsy", ios::out | ios::app);
 		fin << completeMessage.str() << endl;
 		fin.close();
 	}
@@ -379,23 +405,20 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 //Purpose: Keep a log of all server activities
 void eventLog(string info, string ip)
 {
-    //time_t dia; //A buffer to store the date
-    struct tm * timeinfo;
-    time_t hora; //A buffer to store the time
-    fstream fout;
-    fout.open("server_log.txt", ios::app);
-    time(&hora);
-    timeinfo = localtime(&hora);
-    if (info != "")
-    {
-        fout.open("server_log.csv", ios::app);
-        fout << "\""
-             << (string)asctime(timeinfo)
-             << "\",\""
-             << ip
-             << "\",\""
-             << info
-             << "\"\n";
+    DWORD dwWaitResult = WaitForSingleObject(eventLock, INFINITE);
+	if (dwWaitResult == WAIT_OBJECT_0)
+	{
+        //time_t dia; //A buffer to store the date
+        struct tm * timeinfo;
+        time_t hora; //A buffer to store the time
+        fstream fout("server_log.csv", ios::out | ios::app);
+        if (info != "")
+        {
+            time(&hora);
+            timeinfo = localtime(&hora);
+            fout << "\"" << (string)asctime(timeinfo) << "\",\"" << ip << "\",\"" << info << "\"\n";
+        }
         fout.close();
-    }
+	}
+	ReleaseMutex(eventLock);
 }
