@@ -226,8 +226,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
         SendData(client, "221 Closing Transmission Channel");
         return 0;
     }
-    SendData(client, "250 Hello " + ((data[(data.length()-1)] = '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you");
-    eventLog("Sent 250 Hello " + ((data[(data.length()-1)] = '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you", clientIP);
+    SendData(client, "250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you");
+    eventLog("Sent 250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you", clientIP);
     if(!RecvData(client, data))
     {
         eventLog("client disconnect",clientIP);
