@@ -350,12 +350,12 @@ DWORD WINAPI fileThread(LPVOID lpParam)
                 //Open the correct user file and append the string stream into it
 				fin.open((userName + ".txt").c_str(), ios::out | ios::app);
 				fin << toFile.str();
-                eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");
+                eventLog("Stored entire message in " + userName + ".txt", "0.0.0.0");
 				fin.close();
 			}
 			else
 			{
-				cerr << "No user \"" << userName << "\" exists on this server."
+				cerr << "No user " << userName << " exists on this server."
 						<< endl;
 			}
 		}
@@ -369,7 +369,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				//dns stuff after we parse the to line
 				string forwardDomain;
 				//TODO: Fill in forwardDomain
-				eventLog("Sent \"who " + forwardDomain + "\"", DNS_IP);
+				eventLog("Sent who " + forwardDomain, DNS_IP);
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
