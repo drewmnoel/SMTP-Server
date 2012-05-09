@@ -211,7 +211,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
     completeMessage << ((forwarded) ? "true\n" : "false\n");
 
 	//here is where we send and recieve data from the client
-	SendData(client, "220 " + registered_name + " ESMTP Postfix");
+	SendData(client, "220 " + registered_name + " ESMTP Postfix\n");
 	eventLog("220 " + registered_name + " ESMTP Postfix",clientIP);
     string data = "";
 	if(!RecvData(client, data))
@@ -221,10 +221,10 @@ DWORD WINAPI clientThread(LPVOID lpParam)
 	}
     if (!regex_match(data,(regex)"HELO .*\n*"))
     {
-        SendData(client, "221 Closing Transmission Channel");
+        SendData(client, "221 Closing Transmission Channel\n");
         return 0;
     }
-    SendData(client, "250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you");
+    SendData(client, "250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you\n");
     eventLog("Sent 250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you", clientIP);
     if(!RecvData(client, data))
     {
@@ -237,17 +237,17 @@ DWORD WINAPI clientThread(LPVOID lpParam)
         {
             completeMessage << data;
             eventLog("Sent FROM 250 OK", clientIP);
-            SendData(client,"250 OK");
+            SendData(client,"250 OK\n");
         }
         else if (regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
         {
             completeMessage << data;
             eventLog("Sent RCPT 250 OK", clientIP);
-            SendData(client, "250 OK");
+            SendData(client, "250 OK\n");
         }
         else
         {
-            SendData(client, "500 Command Syntax Error");
+            SendData(client, "500 Command Syntax Error\n");
             eventLog("Sent 500 Command Syntax Error", clientIP);
         }
         if(!RecvData(client, data))
@@ -256,7 +256,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
             return 0;
         }
     }
-    SendData(client, "354 End data with <CR><LF>.<CR><LF>");
+    SendData(client, "354 End data with <CR><LF>.<CR><LF>\n");
     eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
     completeMessage << data;
     while (!regex_match(data,(regex)"\\.\n*"))
@@ -270,7 +270,9 @@ DWORD WINAPI clientThread(LPVOID lpParam)
         completeMessage << data;
     }
     Message_Queue += 1;
-    SendData(client, "250 OK: queued as " + Message_Queue);
+    char mBuff[2];
+    sprintf(mBuff,"%d",Message_Queue);
+    SendData(client, "250 OK: queued as " + (string)mBuff + (string)"\n");
     eventLog("Sent 250 OK: queued as " + Message_Queue, clientIP);
 
     //write dat message down
@@ -293,7 +295,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
             return 0;
         }
     }
-    SendData(client, "221 BYE");
+    SendData(client, "221 BYE\n");
     eventLog("Sent 221 BYE", clientIP);
     return 0;
 }
