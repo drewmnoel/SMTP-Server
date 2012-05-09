@@ -7,7 +7,7 @@ const int STRLEN = 256;
 
 SOCKET setUpSocket();
 void SendData(SOCKET,std::string);
-void RecvData(SOCKET,std::string&);
+bool RecvData(SOCKET,std::string&);
 void CloseSocket(SOCKET&);
 bool Connect(SOCKET,std::string,int);
 void Bind(SOCKET,int);
