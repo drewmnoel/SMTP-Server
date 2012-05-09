@@ -250,16 +250,17 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						//connectDNS.ConnectToServer( IPAddress, 53 );
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
 						
-						//ClientSocket connectSMTP;
-						//connectSMTP.ConnectToServer( IPAddress, 25 );
+						ClientSocket connectSMTP;
+						connectSMTP.ConnectToServer( "127.0.0.1", 25 );
 						
-						//connectSMTP.RecvData( Message ); //220 smtp.example.com ESMTP Postfix
-						strcpy( Message, "220 smtp.example.com ESMTP Postfix" );
+						connectSMTP.RecvData( Message, 128 ); //220 smtp.example.com ESMTP Postfix
 						checkError( Message );
-						if( strncmp( Message, "220", 3 ) )
+						if( strncmp( Message, "220", 3 ) == 0 )
 							MessageBox( popup, Message, "220", MB_OK );
-						else
+						else {
 							MessageBox( popup, Message, "Error", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						
 						
@@ -268,17 +269,25 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						removeUser( convert );
 						strcat( Message, convert );
 						strcat( Message, "\0" );
-						//connectSMTP.SendData( Message ); 
-						MessageBox( popup, Message, "HELO", MB_OK );
+						if( connectSMTP.SendData( Message ) )
+							MessageBox( popup, Message, "HELO", MB_OK );
+						else {
+							MessageBox( popup, "Error", "HELO", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
 						
-						//connectSMTP.RecvData( Message ); //250 Hello example.com, I am glad to meet you
-						strcpy( Message, "250 Hello example.com, I am glad to meet you\0" );
-						if( checkError( Message ) )
-							break;
-						MessageBox( popup, Message, "250", MB_OK );
+						if( connectSMTP.RecvData( Message, 128 ) ) { //250 Hello example.com, I am glad to meet you
+							if( checkError( Message ) )
+								break;
+							MessageBox( popup, Message, "250", MB_OK );
+						}
+						else {
+							MessageBox( popup, "Error", "250", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						
 						
@@ -286,15 +295,22 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						hwndToChar( hwndFrom, convert );
 						strcat( Message, convert );
 						strcat( Message, ">" );
-						//connectSMTP.SendData( Message );
-						MessageBox( popup, Message, "MAIL FROM", MB_OK );
+						if( connectSMTP.SendData( Message ) )
+							MessageBox( popup, Message, "MAIL FROM", MB_OK );
+						else {
+							MessageBox( popup, "Error", "MAIL FROM", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
 						
-						//connectSMTP.RecvData( Message );
-						strcpy( Message, "250 Ok\0" );
-						MessageBox( popup, Message , "250 Ok", MB_OK );
+						if( connectSMTP.RecvData( Message, 128 ) ) 
+							MessageBox( popup, Message , "250 Ok", MB_OK );
+						else{
+							MessageBox( popup, "Error" , "250 Ok", MB_OK );
+							return 1;
+						}
 						if( checkError( Message ) )
 							break;
 						if( strcmp( Message, "250 Ok\0" ) != 0) {
@@ -307,13 +323,17 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						hwndToChar( hwndTo, convert );
 						strcat( Message, convert );
 						strcat( Message, ">\0" );
-						//connectSMTP.SendData( Message );
-						MessageBox( popup, Message, "RCPT TO", MB_OK );
+						if( connectSMTP.SendData( Message ) )
+							MessageBox( popup, Message, "RCPT TO", MB_OK );
+						else {
+							MessageBox( popup, "Error", "RCPT TO", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						memset( convert, '\0', sizeof( convert ) );
 						
 						
-						//connectSMTP.RecvData( Message );
+						connectSMTP.RecvData( Message, 128 );
 						strcpy( Message, "250 Ok\0" );
 						MessageBox( popup, Message , "250 Ok", MB_OK );
 						if( checkError( Message ) )
@@ -325,12 +345,16 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						
 						
 						strcpy( Message, "DATA\0" );
-						//connectSMTP.SendData( Message );
-						MessageBox( popup, Message, "DATA", MB_OK );
+						if( connectSMTP.SendData( Message ) )
+							MessageBox( popup, Message, "DATA", MB_OK );
+						else {
+							MessageBox( popup, "Error", "DATA", MB_OK );
+							return 1;
+						}
 						memset( Message, '\0', sizeof( Message ) );
 						
 						
-						//connectSMTP.RecvData( Message );
+						connectSMTP.RecvData( Message, 128 );
 						strcpy( Message, "354 End Data with <CR><LF>.<CR><LF>\0" );
 						if( checkError( Message ) )
 							break;
@@ -408,11 +432,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						 *
 						 */
 						 
-						//connectSMTP.SendData( endKey );
+						connectSMTP.SendData( endKey );
 						MessageBox( popup, endKey, "End Data", MB_OK );
 						
-						//connectSMTP.RecvData( Message );
-						strcpy( Message, "250 Ok: queued as 12345\0" );
+						connectSMTP.RecvData( Message );
+						strcpy( Message, "250 Ok: queued as 12345\n" );
 						if( checkError( Message ) )
 							break;
 						char* findQueued = strstr( Message, "queued as " );
@@ -421,11 +445,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						MessageBox( popup, queued , "queued as", MB_OK );
 						memset( Message, '\0', sizeof( Message ) );
 						
-						//connectSMTP.SendData( "QUIT\0" );
+						connectSMTP.SendData( "QUIT\n" );
 						MessageBox( popup, "QUIT\0", "End Data", MB_OK );
 						
-						//connectSMTP.RecvData( Message );
-						strcpy( Message, "221 Bye\0" );
+						connectSMTP.RecvData( Message, 128 );
+						strcpy( Message, "221 Bye\n" );
 						if( checkError( Message ) )
 							break;
 						MessageBox( popup, Message , "End", MB_OK );
@@ -549,6 +573,11 @@ bool checkError( char* temp )
 	else if ( strncmp( temp, "251", 3) == 0 )
 	{
 		MessageBox( error, "251: User Not Local", "Error Code", MB_OK );
+		return true;
+	}
+	else if ( strncmp( temp, "221", 3) == 0 )
+	{
+		MessageBox( error, "221: Server Ending Connection", "Error Code", MB_OK );
 		return true;
 	}
 	else
