@@ -10,8 +10,6 @@
 #include "Socket.h"
 #include "iniReader.h"
 
-//#define MESSAGE_SIZE
-
 using namespace std;
 
 //start prototypes
@@ -237,13 +235,13 @@ DWORD WINAPI clientThread(LPVOID lpParam)
     {
         if (regex_match(data, (regex)"MAIL FROM:<.+@.+>\n*"))
         {
-            completeMessage << (regex_match(data,(regex)"*\n") ? data : data + "\n");
+            completeMessage << data;
             eventLog("Sent FROM 250 OK", clientIP);
             SendData(client,"250 OK");
         }
         else if (regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
         {
-            completeMessage << (regex_match(data,(regex)"*\n") ? data : data + "\n");
+            completeMessage << data;
             eventLog("Sent RCPT 250 OK", clientIP);
             SendData(client, "250 OK");
         }
@@ -260,7 +258,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
     }
     SendData(client, "354 End data with <CR><LF>.<CR><LF>");
     eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
-    completeMessage << (regex_match(data,(regex)"*\n") ? data : data + "\n");
+    completeMessage << data;
     while (!regex_match(data,(regex)"\\.\n*"))
     {
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", clientIP);
