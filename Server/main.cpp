@@ -295,7 +295,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
             return 0;
         }
     }
-    SendData(client, "221 BYE");
+    SendData(client, "221 BYE\n");
     eventLog("Sent 221 BYE", clientIP);
     return 0;
 }
