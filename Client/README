@@ -1,1 +1,8 @@
 compile with the command g++ *.cpp -o client.exe -l ws2_32 -l gdi32
+
+git pull git@github.com:lostkhoas/smtp-server.git
+
+git status
+git add <filename>
+git commit
+git push git@github.com:lostkhoas/smtp-server.git
