@@ -277,7 +277,7 @@ DWORD WINAPI clientThread(LPVOID lpParam)
     if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 	{
 		//write the email down
-		fstream fin;
+		ofstream fin;
 		fin.open("master_baffer.woopsy", ios::app);
 		fin << completeMessage.str() << endl;
 		fin.close();
@@ -348,7 +348,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 					|| userName == "scott")
 			{
                 //Open the correct user file and append the string stream into it
-				fin.open((userName + ".txt").c_str(), ios::app);
+				fin.open((userName + ".txt").c_str(), ios::out | ios::app);
 				fin << toFile.str();
                 eventLog("Stored entire message in \"" + userName + ".txt\"", "0.0.0.0");
 				fin.close();
@@ -432,7 +432,7 @@ void eventLog(string info, string ip)
         //time_t dia; //A buffer to store the date
         struct tm * timeinfo;
         time_t hora; //A buffer to store the time
-        fstream fout("server_log.csv", ios::out | ios::app);
+        ofstream fout("server_log.csv", ios::app);
         if (info != "")
         {
             time(&hora);
