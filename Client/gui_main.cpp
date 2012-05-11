@@ -285,7 +285,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						hwndToChar( hwndFrom, convert );
 						removeUser( convert );
 						strcat( Message, convert );
-						strcat( Message, "\0" );
+						strcat( Message, "\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "HELO", MB_OK );
 						else {
@@ -315,7 +315,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( Message, "MAIL FROM:<" );
 						hwndToChar( hwndFrom, convert );
 						strcat( Message, convert );
-						strcat( Message, ">" );
+						strcat( Message, ">\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "MAIL FROM", MB_OK );
 						else {
@@ -345,7 +345,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( Message, "RCPT TO:<" );
 						hwndToChar( hwndTo, convert );
 						strcat( Message, convert );
-						strcat( Message, ">\0" );
+						strcat( Message, ">\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "RCPT TO", MB_OK );
 						else {
@@ -372,7 +372,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						memset( Message, '\0', sizeof( Message ) );
 						
 						
-						strcpy( Message, "DATA\0" );
+						strcpy( Message, "DATA\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "DATA", MB_OK );
 						else {
@@ -394,7 +394,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							{
 								char* findEndKey = strstr( Message, "<CR><LF>" );
 								strncpy( endKey, findEndKey + 8, 1 );
-								strcat( endKey, "\0" );
+								strcat( endKey, "\n\0" );
 								MessageBox( popup, endKey, "354 End Data", MB_OK );
 							}
 						}
@@ -409,8 +409,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( Message, "From: <" );
 						hwndToChar( hwndFrom, convert );
 						strcat( Message, convert );
-						strcat( Message, ">\0" );
-						
+						strcat( Message, ">\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "DATA", MB_OK );
 						else {
@@ -423,7 +422,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( Message, "To: <" );
 						hwndToChar( hwndTo, convert );
 						strcat( Message, convert );
-						strcat( Message, ">\0" );
+						strcat( Message, ">\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "DATA", MB_OK );
 						else {
@@ -439,7 +438,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcat( Message, " " );
 						char time[10]; _strtime( time );
 						strcat( Message, time );
-						strcat( Message, "\0");
+						strcat( Message, "\n" );
+						strcat( Message, "\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "DATA", MB_OK );
 						else {
@@ -451,6 +451,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( Message, "Subject: " );
 						hwndToChar( hwndSubject, convert );
 						strcat( Message, convert );
+						strcat( Message, "\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, Message, "DATA", MB_OK );
 						else {
@@ -465,7 +466,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						strcpy( messageBody, "\n" );
 						hwndToChar( hwndEdit, convertBody );
 						strcat( messageBody, convertBody );
-						strcat( messageBody, "\n" );
+						strcat( messageBody, "\n\0" );
 						if( connectSMTP.SendData( Message ) )
 							MessageBox( popup, messageBody, "DATA", MB_OK );
 						else {
