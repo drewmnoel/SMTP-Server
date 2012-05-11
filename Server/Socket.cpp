@@ -55,7 +55,7 @@ bool Socket::RecvData(std::string &input)
     if (i == SOCKET_ERROR)
     {
         std::cout << "Client disconnected\n";
-        eventLog("Received: " + (std::string)buffer, dstIP)
+        eventLog("Received: " + (std::string)buffer, dstIP);
         return false;
     }
     else
@@ -70,7 +70,7 @@ void Socket::CloseSocket()
 {
     closesocket(sock);
     sock = INVALID_SOCKET;
-    eventLog("")
+    eventLog("", "");
 }
 
 void Socket::Listen(int numOfConnections)
