@@ -41,6 +41,9 @@ void ForwardThread::run(LPVOID info)
 				if(clientData.compare(4, clientData.length(), "RCPT"))
 				{
 					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-3);
+					int start = clientData.find("<");
+                    int length = clientData.find("@") - start;
+                    userName = clientData.substr(++start, --length); 
 				}
 			}
 
@@ -57,6 +60,7 @@ void ForwardThread::run(LPVOID info)
 
 			/* We have read the entire message into memory */
 			/* Read the username */
+
 
 	        //The user is local
 			if (!forward)
@@ -103,7 +107,7 @@ void ForwardThread::dnsLookup(string toLookup)
 	if (dwWaitResult == WAIT_OBJECT_0)
 	{
 		dns->SendData("who " + toLookup);
-		
+
 		string response;
 		dns->RecvData(response);
 
