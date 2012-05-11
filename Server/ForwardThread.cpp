@@ -17,7 +17,7 @@ void ForwardThread::run(LPVOID info)
 	dns = new Socket(Socks->dns, DNS_IP);
 
 	fstream fin;
-	bool forward;
+	bool finalDestination;
 	stringstream fileBuffer, restOfFile;
 	string clientData, userName, destServer;
 
@@ -45,10 +45,11 @@ void ForwardThread::run(LPVOID info)
 				ReleaseMutex(fileLock);
 				continue;
 			}
+			cout << "A\n";
 			if (clientData == "true")
-				forward = true;
+				finalDestination = true;
 			else
-				forward = false;
+				finalDestination = false;
 
 
 
@@ -99,7 +100,7 @@ void ForwardThread::run(LPVOID info)
 
 
 	        //The user is local
-			if (!forward)
+			if (finalDestination)
 			{
 				if (userName == "alex" || userName == "dan" || userName == "drew"
 						|| userName == "scott" || userName == "rich")
@@ -117,7 +118,7 @@ void ForwardThread::run(LPVOID info)
 				}
 			}
 
-			//We are forwarding the message
+			//We are finalDestinationing the message
 			else
 			{
 				//TODO: Get the destination out of the RCPT TO:<x@y>
@@ -132,7 +133,7 @@ void ForwardThread::run(LPVOID info)
 	                }
 	            }
 			}
-					ReleaseMutex(fileLock);
+			ReleaseMutex(fileLock);
 		
 		}
 	}
