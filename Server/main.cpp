@@ -2,9 +2,8 @@
 //Assignment: SMTP
 //File: main.cpp
 //Purpose: Main file for the server
-
 #include "SMTPSocket.h"
-
+using namespace std;
 //start prototypes
 DWORD WINAPI clientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
@@ -68,13 +67,13 @@ void eventLog(string info, string ip)
         if (info != "")
         {
             //Expand upon the DNS response codes for logging purposes
-            if (info.length() == 1) && atoi(info[0]) == 0)
-                info = "0 - Name registered successfully"
-            else if (info.length() == 1) && atoi(info[0]) == 3)
+            if (info == "0")
+                info = "0 - Name registered successfully";
+            else if (info == "3")
                 info = "3 - Domain not registered";
-            else if (info.length() == 1) && atoi(info[0]) == 4)
+            else if (info == "4")
                 info = "4 - Bad command";
-            else if (info.length() == 1) && atoi(info[0]) == 5)
+            else if (info == "5")
                 info = "5 - Error encountered";
 
                 time(&hora);

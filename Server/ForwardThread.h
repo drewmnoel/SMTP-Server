@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include "ClientThread.h"
+using namespace std;
 
 class ForwardThread
 {

@@ -85,7 +85,7 @@ SOCKET SMTPSocket::dnsRegister()
     if (regex_match(response, (regex)"5\n*"))
     {
         //request a DNS_DNS_NAME_BACKUP DNS_NAME from the DNS server
-        eventLog("Primary name already taken. Trying backup name", 0.0.0.0)
+        eventLog("Primary name already taken. Trying backup name", "0.0.0.0");
         temp.SendData("iam " + DNS_NAME_BACKUP);
         if(!temp.RecvData(response))
         {
