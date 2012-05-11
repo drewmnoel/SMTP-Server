@@ -31,7 +31,7 @@ int main()
 
 	SMTPSocket server;
 	server.run();
-    
+
 	system("pause");
 	return 0;
 }
@@ -108,12 +108,10 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 				//dns stuff after we parse the to line
 				string forwardDomain;
 				//TODO: Fill in forwardDomain
-				eventLog("Sent who " + forwardDomain, DNS_IP);
 				SendData(dns, "who " + forwardDomain);
 				string response;
 				RecvData(dns, response);
 
-				eventLog("Attempting to forward message", response);
 			    if (response == "3")
                 {
                     eventLog("Domain not registered", "0.0.0.0");

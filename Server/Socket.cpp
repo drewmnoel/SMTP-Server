@@ -39,12 +39,11 @@ void Socket::SendData(std::string input)
 {
     char buffer[STRLEN];
     memset(buffer,0,STRLEN);
-    for(unsigned int x = 0;x < input.length();x++)
+    for(unsigned int x = 0; x < input.length(); x++)
     {
         buffer[x] = input[x];
     }
     send(sock, buffer, strlen(buffer), 0);
-
     eventLog("Sent: " + (std::string)buffer, dstIP);
 }
 
@@ -55,7 +54,8 @@ bool Socket::RecvData(std::string &input)
 	int i = recv(sock, buffer, STRLEN, 0);
     if (i == SOCKET_ERROR)
     {
-        std::cout << "client disconnected\n";
+        std::cout << "Client disconnected\n";
+        eventLog("Received: " + (std::string)buffer, dstIP)
         return false;
     }
     else
@@ -70,6 +70,7 @@ void Socket::CloseSocket()
 {
     closesocket(sock);
     sock = INVALID_SOCKET;
+    eventLog("")
 }
 
 void Socket::Listen(int numOfConnections)

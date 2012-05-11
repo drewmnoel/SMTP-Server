@@ -29,7 +29,7 @@ void ClientThread::run(LPVOID info)
 	client->SendData("220 " + registeredName + " ESMTP Postfix\n");
 	if(!client->RecvData(data))
 	{
-	    eventLog("client disconnect",Socks->clientInfo);
+	    eventLog("client disconnect", Socks->clientInfo);
         return;
 	}
     if (!regex_match(data,(regex)"HELO .*\n*"))
@@ -39,12 +39,11 @@ void ClientThread::run(LPVOID info)
     }
     client->SendData("250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you\n");
 
-
     while (!regex_match(data,(regex)"DATA\n*"))
     {
 		if(!client->RecvData(data))
 		{
-			eventLog("client disconnect",Socks->clientInfo);
+			eventLog("Client disconnected", Socks->clientInfo);
 			return;
 		}
         if (regex_match(data, (regex)"MAIL FROM:<.+@.+>\n*") || regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
@@ -56,10 +55,10 @@ void ClientThread::run(LPVOID info)
         {
             client->SendData("500 Command Syntax Error\n");
         }
-        
+
         if(!client->RecvData(data))
         {
-            eventLog("client disconnect",Socks->clientInfo);
+            eventLog("client disconnect", Socks->clientInfo);
             return;
         }
     }
@@ -70,7 +69,7 @@ void ClientThread::run(LPVOID info)
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", Socks->clientInfo);
         if(!client->RecvData(data))
         {
-            eventLog("client disconnect",Socks->clientInfo);
+            eventLog("Client disconnect", Socks->clientInfo);
             return;
         }
         completeMessage << data;
