@@ -7,7 +7,7 @@ void ForwardThread::run(LPVOID info)
 	fstream fin;
 	bool forward;
 	stringstream fileBuffer;
-	string clientData, userName;
+	string clientData, userName, destServer;
 
 	while(1)
 	{
@@ -36,6 +36,12 @@ void ForwardThread::run(LPVOID info)
 			{
 				getline(fin, clientData);
 				fileBuffer << clientData << endl;
+
+				// See if we got a RCPT TO
+				if(clientData.compare(4, clientData.length(), "RCPT"))
+				{
+					destServer = clientData.substr(clientData.find('@')+1);
+				}
 			}
 
 			//Keep reading in until the end of message marker
@@ -75,7 +81,7 @@ void ForwardThread::run(LPVOID info)
 			else
 			{
 				//TODO: Get the destination out of the RCPT TO:<x@y>
-				dnsLookup("");
+				dnsLookup(destServer);
 	            //now that we have an ip we can continue or we can end it here if invalid or whatever
 	            if (validRelay)
 	            {
