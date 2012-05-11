@@ -139,6 +139,6 @@ void ClientThread::checkSource()
 DWORD WINAPI runClient(LPVOID toPass)
 {
 	ClientThread newThread;
-	newThread.run(toPass);
+	//newThread.run(toPass);
 	return 0;
 }
