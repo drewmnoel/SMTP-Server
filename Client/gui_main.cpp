@@ -244,7 +244,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			if(HIWORD(wParam) == BN_CLICKED)
 			{
 				//LOWORD macro retrieves the low-order word from the specified value. 
-				switch(LOWORD(wParam))
+				switch( LOWORD( wParam ) )
 				{
 					// ...And the button is the one with the
 					//     identifier IDC_BUTTON...
@@ -268,6 +268,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						if( connectSMTP.RecvData( Message, 128 ) ) { //220 smtp.example.com ESMTP Postfix
 							if( checkError( Message ) )
 								return 1;
+							if( strncmp( Message, "220", 3 ) != 0) {
+								SetWindowText(hwndFrom, "");
+								return 1;
+							}
 							MessageBox( popup, Message, "220", MB_OK );
 						}
 						else {

@@ -27,8 +27,9 @@ Socket::Socket()
 		if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
 			throw "Socket Initialization: Error with WSAStartup\n";
     } catch( char* str ) {
-		cerr << "Exception raised: " << str << endl;
-        system("pause");
+		char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
         WSACleanup();
         exit(10);
     }
@@ -39,26 +40,39 @@ Socket::Socket()
 		if ( mySocket == INVALID_SOCKET )
 			throw "Socket Initialization: Error creating socket";
 	} catch( char* str ) {
-        cerr << "Exception raised: " << str << endl;
-        system("pause");
-        WSACleanup();
+        char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
+        WSACleanup( );
         exit(11);
     }
     myBackup = mySocket;
+	logOut.open("logfile.csv", ios::out | ios::app);
+	std::string title = "\"New Session\"\n\"Date\",\"Time\",\"Source Address\",\"Port\",\"Message\"\n";
+	if( logOut.is_open( ) ) 
+		logOut<<title;
 }
 
 Socket::~Socket( )
 {
 	CloseHandle( ghMutex );
     WSACleanup( );
-    //logOut.close( );
+    logOut.close( );
 }
 
 bool Socket::SendData( char *buffer )
 {
-    send( mySocket, buffer, strlen( buffer ), 0 );
-    logInfo( &myAddress, buffer );
-    return true;
+	try {
+		if( send( mySocket, buffer, strlen( buffer ), 0 ) == SOCKET_ERROR )
+			throw "Send Error";
+		logConnectionInfo( &myAddress, buffer );
+		return true;
+	} catch( char* str ) {
+		char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
+		return false;
+	}
 }
 
 bool Socket::RecvData( char *buffer, int size )
@@ -66,7 +80,7 @@ bool Socket::RecvData( char *buffer, int size )
     memset( buffer, '\0', 256); 
     int i = recv( mySocket, buffer, size, 0 );
     buffer[i] = '\0';
-    logInfo(&clientSocket, buffer);
+    logConnectionInfo(&clientSocket, buffer);
     return true;
 }
 
@@ -75,7 +89,7 @@ bool Socket::RecvData( char *buffer )
     memset( buffer, '\0', 256); 
     int i = recv( mySocket, buffer, sizeof( buffer ), 0 );
     buffer[i] = '\0';
-    logInfo(&clientSocket, buffer);
+    logConnectionInfo(&clientSocket, buffer);
     return true;
 }
 
@@ -89,18 +103,18 @@ void Socket::CloseConnection()
 void Socket::GetAndSendMessage( )
 {
     char message[STRLEN];
-    cout<<"Send > ";
+    //cout<<"Send > ";
     memset( message, '\0', 256);
-    cin.get( message, STRLEN );
+    //cin.get( message, STRLEN );
     message[256] = '\0';
     SendData( message );
-    cin.ignore(numeric_limits<streamsize>::max(),'\n');
-    fflush(stdin);
+    //cin.ignore(numeric_limits<streamsize>::max(),'\n');
+    //fflush(stdin);
 }
 
 DWORD WINAPI ReceiveCommand( LPVOID lpParam ) 
 {
-	cout << "Thread created: " << GetCurrentThreadId() << endl;
+	//cout << "Thread created: " << GetCurrentThreadId() << endl;
 	struct passedInfo *current = ( struct passedInfo* ) lpParam;
 	SOCKET current_client = current->passedSocket;
 	char sendBuf[100], recvBuf[100];
@@ -117,50 +131,50 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 				memset( sendBuf, '\0', strlen( sendBuf ) );
 				memset( recvBuf, '\0', strlen( recvBuf ) );
 				
-				cout << "---Waiting---\n";
+				//cout << "---Waiting---\n";
 				res = recv( current_client, recvBuf, sizeof( recvBuf ), 0 );
 				recvBuf[strlen( recvBuf )] = '\0';
-				cout << "Received in thread " << GetCurrentThreadId( ) <<": " << recvBuf;
+				//cout << "Received in thread " << GetCurrentThreadId( ) <<": " << recvBuf;
 				
 				if( strcmp( "quit\n\0", recvBuf ) == 0 )
 				{
-					cout << "Ending Thread " << GetCurrentThreadId( ) << endl;
+					//cout << "Ending Thread " << GetCurrentThreadId( ) << endl;
 					ReleaseMutex( ghMutex ); fflush( stdin );
 					//TerminateThread( hThread, 0 );
 					return 0;
 				}
 				else if( strcmp( "Hello\n\0", recvBuf ) == 0 )
 				{
-					cout << "Send in thread " << GetCurrentThreadId() <<": Hello to you to\n";
+					//cout << "Send in thread " << GetCurrentThreadId() <<": Hello to you to\n";
 					send( current_client, "Hello to you to\0", sizeof( "Hello to you to\0" ), 0 );
 					fflush( stdin );
 				}
 				else if( strcmp( "message\n\0", recvBuf ) == 0 )
 				{
 					do {
-						cout << "Send in thread " << GetCurrentThreadId() << ": " << recvBuf << endl;
+						//cout << "Send in thread " << GetCurrentThreadId() << ": " << recvBuf << endl;
 						send( current_client, recvBuf, sizeof( recvBuf ), 0 );
 						memset( recvBuf, '\0', 100 );
 						recv( current_client, recvBuf, sizeof( recvBuf ), 0 );
-						cout << "Received in thread " << GetCurrentThreadId( ) <<": " << recvBuf;
+						//cout << "Received in thread " << GetCurrentThreadId( ) <<": " << recvBuf;
 					} while( strcmp( ".\n\0", recvBuf ) != 0 );
 					strcpy( sendBuf, "Echo mode end\n" );
 					send( current_client, sendBuf, sizeof( sendBuf ), 0 );
 				}
 				else if( res == 0 )
 				{
-					cout << "Ending Thread " << GetCurrentThreadId( ) << endl;
+					//cout << "Ending Thread " << GetCurrentThreadId( ) << endl;
 					ReleaseMutex( ghMutex ); fflush( stdin );
 					//TerminateThread( hThread, 0 );
 					return 0;
 				}
 				else
 				{
-					cout << "Send in thread " << GetCurrentThreadId() <<": "; 
-					cin.get( sendBuf, 100 );
+					//cout << "Send in thread " << GetCurrentThreadId() <<": "; 
+					//cin.get( sendBuf, 100 );
 					send( current_client, sendBuf, sizeof( sendBuf ), 0);
-					cin.clear( );
-					cin.ignore( numeric_limits<streamsize>::max( ), '\n' );
+					//cin.clear( );
+					//cin.ignore( numeric_limits<streamsize>::max( ), '\n' );
 				}
 				ReleaseMutex( ghMutex );
 				break;
@@ -168,18 +182,18 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 				return FALSE;
 		}
     }
-	cout << "Thread ended\r\n";
+	//cout << "Thread ended\r\n";
 	return 0;
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   Log::logInfo()
+//Meathod:   Socket::logConnectionInfo()
 //Purpose:   Logs connection information for a sockaddr_in and a corresponding 
-//           message. Created for future use, specifically threading.
+//           message.
 //Variables: date, time, socket->sin_addr, socket->sin_port
 //Returns:   void
 //------------------------------------------------------------------------------
-void Socket::logInfo(sockaddr_in *socket, char *buffer) 
+void Socket::logConnectionInfo( sockaddr_in *socket, char *buffer ) 
 {
     char date[10], time[10];
 	logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
@@ -189,7 +203,21 @@ void Socket::logInfo(sockaddr_in *socket, char *buffer)
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::Bind()
+//Meathod:   Socket::logErrorInfo()
+//Purpose:   Logs error information for exceptino thrown 
+//           message.
+//Variables: date, time, socket->sin_addr, socket->sin_port
+//Returns:   void
+//------------------------------------------------------------------------------
+void Socket::logErrorInfo( char *buffer ) 
+{
+    char date[10], time[10];
+	logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
+    logOut << ",\"" << buffer << "\"\n";
+}
+
+//------------------------------------------------------------------------------
+//Meathod:   ServerSocket::Bind( )
 //Purpose:   Binds the a socket with a given port
 //Variables: myAddress, mySocket
 //Returns:   void
@@ -199,18 +227,21 @@ void ServerSocket::Bind( int port )
     myAddress.sin_family = AF_INET;
     myAddress.sin_addr.s_addr = inet_addr( "127.0.0.1" );
     myAddress.sin_port = htons( port );
-
-    if ( bind ( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress) ) == SOCKET_ERROR )
-    {
-        cerr << "ServerSocket: Failed to connect\n";
-        system( "pause" );
+	
+	try {
+		if ( bind ( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress) ) == SOCKET_ERROR )
+			throw "ServerSocket: Failed to bind socket\n";
+    } catch( char* str ) {
+        char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
         WSACleanup( );
         exit( 14 );
     }
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::Listen()
+//Meathod:   ServerSocket::Listen( )
 //Purpose:   Listens for connections on a bound port
 //Variables: mySocket
 //Returns:   void
@@ -221,15 +252,16 @@ void ServerSocket::Listen( int connections )
 		if ( listen ( mySocket, connections ) == SOCKET_ERROR )
 			throw "ServerSocket: Error listening on socket\n";
 	} catch( char* str ) {
-        cerr << "Exception raised: " << str << endl;
-        system( "pause" );
+        char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
         WSACleanup( );
         exit( 15 );
     }
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::Accept()
+//Meathod:   ServerSocket::Accept( )
 //Purpose:   Accept connections on port that is being listened on
 //Variables: clientSocket, acceptSocket, acceptedInfo, hThread, dwThreadId
 //Returns:   void
@@ -242,8 +274,7 @@ void ServerSocket::Accept( )
 	ghMutex = CreateMutex( NULL, FALSE, NULL );
     if ( ghMutex == NULL )
 	{
-		cerr << "Mutex Error\n";
-        system( "pause" );
+		//cerr << "Mutex Error\n";
         WSACleanup( );
 		exit( 16 );
 	}
@@ -260,18 +291,18 @@ void ServerSocket::Accept( )
 		count++;
 		acceptedInfo.passedSocket = acceptSocket;
 		acceptedInfo.conCount = count;
-		cout << acceptedInfo.conCount << endl;
+		//cout << acceptedInfo.conCount << endl;
         hThread = CreateThread( NULL, 0, ReceiveCommand, (LPVOID)&acceptedInfo, 0, &dwThreadId);
         if ( hThread == NULL )
         {
-            cerr << "CreateThread Error\n";
+            //cerr << "CreateThread Error\n";
             break;
         }			
     }
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::StartHosting()
+//Meathod:   ServerSocket::StartHosting( )
 //Purpose:   Runs the Bind, Listen, and Accept meathods
 //Variables: port
 //Returns:   void
@@ -307,7 +338,7 @@ void ServerSocket::loginVerify( )
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::commands()
+//Meathod:   ServerSocket::commands( )
 //Purpose:   Checks which commands have been sent to the server and executes the 
 //           appropriate command
 //Variables: recMessage, input, selection
@@ -342,7 +373,7 @@ void ServerSocket::commands( const char* recMessage )
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::listDir()
+//Meathod:   ServerSocket::listDir( )
 //Purpose:   list the contents of the directory
 //Variables: recMessage, input, selection
 //Returns:   void
@@ -366,7 +397,7 @@ void ServerSocket::listDir( )
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ServerSocket::sendFile()
+//Meathod:   ServerSocket::sendFile( )
 //Purpose:   Opens and sends a file to the client
 //Variables: recMessage, input, selection
 //Returns:   void
@@ -421,7 +452,7 @@ void ServerSocket::sendFile( char* fileName )
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   ClientSocket::ConnectToServer()
+//Meathod:   ClientSocket::ConnectToServer( )
 //Purpose:   Opens as connection to the server
 //Variables: ipAddress, port, myAddress, mySocket, myAddres
 //Returns:   void
@@ -436,8 +467,9 @@ void ClientSocket::ConnectToServer( const char *ipAddress, int port )
 	    if ( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
 			throw "ClientSocket: Failed to connect\n";
 	} catch( char* str ) {
-        cerr << "Exception raised: " << str << endl;
-        system( "pause" );
+        char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
         WSACleanup( );
         exit( 20 );
     }

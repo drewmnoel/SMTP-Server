@@ -7,7 +7,6 @@
 //------------------------------------------------------------------------------
 
 #pragma once
-#include <iostream>
 #include <limits>
 #include <fstream>
 #include <ctime>
@@ -37,14 +36,15 @@ class Socket
         struct dirent *dirStruct;
 		
     public:
-        Socket();
-        ~Socket();
+        Socket( );
+        ~Socket( );
         bool SendData( char* );
-	bool RecvData( char* );
+		bool RecvData( char* );
         bool RecvData( char*, int );
         void CloseConnection( );
         void GetAndSendMessage( );
-        void logInfo( sockaddr_in* socket, char* );
+        void logConnectionInfo( sockaddr_in* socket, char* );
+		void logErrorInfo( char* );
 };
 
 class ServerSocket : public Socket
