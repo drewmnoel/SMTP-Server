@@ -33,7 +33,7 @@ int main()
     //Shutdown server if mutex setup failed
 	if (!eventLock || !dnsLock || !fileLock)
 	{
-	    eventLog("Failed to setup mutexes", 0.0.0.0)
+	    eventLog("Failed to setup mutexes", "0.0.0.0");
 		return (1);
 	}
 

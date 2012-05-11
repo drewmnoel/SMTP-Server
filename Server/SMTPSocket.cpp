@@ -5,6 +5,7 @@
 
 #include "SMTPSocket.h"
 #include "ClientThread.h"
+#include "ForwardThread.h"
 
 void SMTPSocket::setUp()
 {
@@ -28,6 +29,7 @@ void SMTPSocket::run()
 	Socks.dns = dnsRegister();
 	Socks.client = SOCKET_ERROR;
 
+    CreateThread(NULL, 0, runFile, (LPVOID) &Socks, 0, NULL);
 	while (1)
 	{
 		Socks.client = Accept(Socks.clientInfo);

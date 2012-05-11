@@ -1,4 +1,9 @@
 #include "ForwardThread.h"
+
+ForwardThread::ForwardThread()
+{
+}
+
 void ForwardThread::run(LPVOID info)
 {
 	Socks = (comm*) info;
@@ -11,6 +16,7 @@ void ForwardThread::run(LPVOID info)
 
 	while(1)
 	{
+		Sleep(5);
 		// Get the file mutex
 		DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
 		if (dwWaitResult == WAIT_OBJECT_0)
@@ -40,10 +46,10 @@ void ForwardThread::run(LPVOID info)
 				// See if we got a RCPT TO
 				if(clientData.compare(4, clientData.length(), "RCPT"))
 				{
-					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-3);
+					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
 					int start = clientData.find("<");
                     int length = clientData.find("@") - start;
-                    userName = clientData.substr(++start, --length); 
+                    userName = clientData.substr(++start, --length);
 				}
 			}
 
@@ -142,7 +148,9 @@ void ForwardThread::dnsLookup(string toLookup)
 	ReleaseMutex(dnsLock);
 }
 
-DWORD WINAPI fileThread(LPVOID lpParam)
+DWORD WINAPI runFile(LPVOID lpParam)
 {
+	ForwardThread myThread;
+	//myThread.run(lpParam);
 	return 0;
 }
