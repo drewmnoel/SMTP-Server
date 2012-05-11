@@ -22,30 +22,29 @@ HANDLE ghMutex;
 
 Socket::Socket()
 {
-    if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
-    {
-        cerr<<"Socket Initialization: Error with WSAStartup\n";
+	//WSAStartup
+    try { 
+		if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
+			throw "Socket Initialization: Error with WSAStartup\n";
+    } catch( char* str ) {
+		cerr << "Exception raised: " << str << '\n';
         system("pause");
         WSACleanup();
         exit(10);
     }
 
     //Create a socket
-    mySocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-
-    if ( mySocket == INVALID_SOCKET )
-    {
-        cerr<<"Socket Initialization: Error creating socket"<<endl;
+	try {
+		mySocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+		if ( mySocket == INVALID_SOCKET )
+			throw "Socket Initialization: Error creating socket";
+	} catch( char* str ) {
+        cerr << "Exception raised: " << str << '\n';
         system("pause");
         WSACleanup();
         exit(11);
     }
-
     myBackup = mySocket;
-    
-    //logOut.open("logfile.csv", ios::out | ios::app);
-	//std::string title = "\"New Session\"\n\"Date\",\"Time\",\"Source Address\",\"Port\",\"Message\"\n";
-	//logOut.is_open() ? logOut<<title : std::cerr<<"Error Opening File\n";
 }
 
 Socket::~Socket( )
@@ -218,9 +217,11 @@ void ServerSocket::Bind( int port )
 //------------------------------------------------------------------------------
 void ServerSocket::Listen( int connections )
 {
-    if ( listen ( mySocket, connections ) == SOCKET_ERROR )
-    {
-        cerr << "ServerSocket: Error listening on socket\n";
+	try {
+		if ( listen ( mySocket, connections ) == SOCKET_ERROR )
+			throw "ServerSocket: Error listening on socket\n";
+	catch( char* str ) {
+        cerr << "Exception raised: " << str << '\n';
         system( "pause" );
         WSACleanup( );
         exit( 15 );

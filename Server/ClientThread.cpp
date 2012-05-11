@@ -39,13 +39,14 @@ void ClientThread::run(LPVOID info)
     }
     client->SendData("250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you\n");
 
+    if(!client->RecvData(data))
+    {
+        eventLog("client disconnect",Socks->clientInfo);
+        return;
+    }
+
     while (!regex_match(data,(regex)"DATA\n*"))
     {
-		if(!client->RecvData(data))
-		{
-			eventLog("Client disconnected", Socks->clientInfo);
-			return;
-		}
         if (regex_match(data, (regex)"MAIL FROM:<.+@.+>\n*") || regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
         {
             completeMessage << data;
