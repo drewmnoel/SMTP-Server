@@ -7,23 +7,33 @@
 #include <regex>
 #include "Socket.h"
 #include <iostream>
-using namespace std;
 
 class SMTPSocket : protected Socket
 {
 private:
+    //The names we attempt to register
 	std::string DNS_NAME;
 	std::string DNS_NAME_BACKUP;
 
+    //Ports used by the DNS server and our SMTP Server
 	int DNS_PORT;
 	int PORT;
+
 public:
+    //Method to setup client connection and SMTP session
 	void run();
 
 protected:
+    //Method to setup our server socket
 	void setUp();
+
+	//Method to register our domain name witht he DNS server
 	SOCKET dnsRegister();
+
 };
 
+//The IP of the DNS server
 extern std::string DNS_IP;
+
+//The name that we successfully registered with the DNS server or a failure default
 extern std::string registeredName;

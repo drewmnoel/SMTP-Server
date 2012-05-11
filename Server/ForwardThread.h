@@ -1,9 +1,15 @@
+//Project.setAuthors("Richard Couillard", "Alexander Leary", "Daniel Mercado", "Scott Fenwick");
+//Assignment: SMTP
+//File: ForwardThread.h
+//Purpose: Declaration of the ForwardThread class
+
 #pragma once
 #include <windows.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include "ClientThread.h"
+
 using namespace std;
 class ForwardThread
 {

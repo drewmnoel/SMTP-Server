@@ -1,3 +1,8 @@
+//Project.setAuthors("Richard Couillard", "Alexander Leary", "Daniel Mercado", "Scott Fenwick");
+//Assignment: SMTP
+//File: ForwardThread.cpp
+//Purpose: Definition of the ForwardThread class
+
 #include "ForwardThread.h"
 
 ForwardThread::ForwardThread()
@@ -107,6 +112,11 @@ void ForwardThread::run(LPVOID info)
 	}
 }
 
+//Name: dnsLookup
+//Parameters: 1
+//    toLookup - The IP to perform the lookup for
+//Returns: none
+//Purpose: Determine the name associated with an IP address
 void ForwardThread::dnsLookup(string toLookup)
 {
 	DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
@@ -119,7 +129,6 @@ void ForwardThread::dnsLookup(string toLookup)
 
 		if (response == "3")
 		{
-			eventLog("Domain not registered", "0.0.0.0");
 			cout << "Domain not registered\n";
 			//*Put it at the end of the file
 			validRelay = false;
@@ -127,7 +136,6 @@ void ForwardThread::dnsLookup(string toLookup)
 		}
 		else if (response == "4")
 		{
-			eventLog("DNS Bad Command", "0.0.0.0");
 			cout << "Bad command\n";
 			validRelay = false;
 			return;
@@ -137,11 +145,11 @@ void ForwardThread::dnsLookup(string toLookup)
 			relay = new Socket();
 			if (!relay->Connect(response,25)) {
 				cout << "Connection to relay failed\n";
-				validRelay = true;
+				validRelay = false;
 				return;
 			}
 			else
-				validRelay = false;
+				validRelay = true;
 		}
 		//check if its an ip or an invalid address and cannot sent it
 	}

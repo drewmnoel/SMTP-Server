@@ -67,10 +67,20 @@ void eventLog(string info, string ip)
         //As long as the message is not blank, log it
         if (info != "")
         {
-            time(&hora);
-            timeinfo = localtime(&hora);
-            string date = (string)asctime(timeinfo);
-            fout << "\"" << date.substr(0,(date.length() - 1)) << "\",\"" << ip << "\",\"" << info << "\"\n";
+            //Expand upon the DNS response codes for logging purposes
+            if (info.length() == 1) && atoi(info[0]) == 0)
+                info = "0 - Name registered successfully"
+            else if (info.length() == 1) && atoi(info[0]) == 3)
+                info = "3 - Domain not registered";
+            else if (info.length() == 1) && atoi(info[0]) == 4)
+                info = "4 - Bad command";
+            else if (info.length() == 1) && atoi(info[0]) == 5)
+                info = "5 - Error encountered";
+
+                time(&hora);
+                timeinfo = localtime(&hora);
+                string date = (string)asctime(timeinfo);
+                fout << "\"" << date.substr(0,(date.length() - 1)) << "\",\"" << ip << "\",\"" << info << "\"\n";
         }
         //Close the file
         fout.close();
