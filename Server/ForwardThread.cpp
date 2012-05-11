@@ -45,7 +45,6 @@ void ForwardThread::run(LPVOID info)
 				ReleaseMutex(fileLock);
 				continue;
 			}
-			cout << "A\n";
 			if (clientData == "true")
 				finalDestination = true;
 			else
@@ -121,15 +120,19 @@ void ForwardThread::run(LPVOID info)
 			//We are finalDestinationing the message
 			else
 			{
-				//TODO: Get the destination out of the RCPT TO:<x@y>
 				dnsLookup(destServer);
+
+				relay.SendData("HELO " + registeredName);
+	            Sleep(50);
+
 	            //now that we have an ip we can continue or we can end it here if invalid or whatever
 	            if (validRelay)
 	            {
 	                while (clientData != ".")
 	                {
 	                    getline(fileBuffer, clientData);
-	                    relay->SendData(clientData + "\n");
+	                    relay.SendData(clientData + "\n");
+	                    Sleep(50);
 	                }
 	            }
 			}
@@ -170,8 +173,9 @@ void ForwardThread::dnsLookup(string toLookup)
 		}
 		else
 		{
-			relay = new Socket();
-			if (!relay->Connect(response,PORT)) 
+			relay = Socket();
+			relay.setUpSocket();
+			if (!relay.Connect(response,PORT)) 
 			{
 				validRelay = false;
 				return;

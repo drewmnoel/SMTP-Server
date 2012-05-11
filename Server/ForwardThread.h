@@ -27,7 +27,7 @@ private:
     //Struct containing client/IP socket and DNS sokcet
 	comm *Socks;
 	Socket *dns;
-	Socket *relay;
+	Socket relay;
 
 	//Whether or not the chosen relay is online/working/etc.
 	bool validRelay;

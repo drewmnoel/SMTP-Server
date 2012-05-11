@@ -119,11 +119,12 @@ SOCKET Socket::Accept(std::string &IP)
 //Purpose: Connect to client or DNS Server. Closes connection/socket on failure
 bool Socket::Connect(std::string ip, int port)
 {
-    sockaddr_in myAddress;
+    std::cout << "Connecting to: " << ip << " @ " << port << std::endl;
+    SOCKADDR_IN myAddress;
     char ipAddress[16];
     memset(ipAddress,0,16);
     //Convert from C++-style string to C-style string
-    for(int x = 0;x < 16; x++)
+    for(unsigned int x = 0;x < ip.length(); x++)
     {
         ipAddress[x] = ip[x];
     }
@@ -135,9 +136,10 @@ bool Socket::Connect(std::string ip, int port)
 
 	if (connect(sock, (SOCKADDR*) &myAddress,sizeof(myAddress)) == SOCKET_ERROR)
 	{
+        std::cerr << WSAGetLastError() << std::endl;
+        WSACleanup();
 	    eventLog("Failed to connect", ipAddress);
 		std::cerr << "Failed to connect to: " << ipAddress << ":" << port << std::endl;
-		WSACleanup();
 		return false;
 	}
 	return true;
