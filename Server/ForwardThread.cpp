@@ -129,14 +129,14 @@ void ForwardThread::dnsLookup(string toLookup)
 
 		if (response == "3")
 		{
-			cout << "Domain not registered\n";
+			//cout << "Domain not registered\n";
 			//*Put it at the end of the file
 			validRelay = false;
 			return;
 		}
 		else if (response == "4")
 		{
-			cout << "Bad command\n";
+			//cout << "Bad command\n";
 			validRelay = false;
 			return;
 		}
@@ -144,7 +144,7 @@ void ForwardThread::dnsLookup(string toLookup)
 		{
 			relay = new Socket();
 			if (!relay->Connect(response,25)) {
-				cout << "Connection to relay failed\n";
+				//cout << "Connection to relay failed\n";
 				validRelay = false;
 				return;
 			}
