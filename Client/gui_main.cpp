@@ -191,32 +191,44 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		//(char* tempText, int x, int y, int width, int height, int identifier, HWND hwnd)
         case WM_CREATE:
 			// To Fields
-			hwndToLabel = CreateStatic("To:", 10, 10, 75, 20, IDC_LABEL_TO, hwnd);
-			SetDefaultFont(IDC_LABEL_TO, hwnd);
-			hwndTo = CreateAddress("to@To.com", 85, 10, 200, 20, IDC_TO, hwnd);
-			SetDefaultFont(IDC_TO, hwnd);
+			char Label[128]; memset( Label, '\0', 128 );
+			strcpy( Label, "To: " );
+			hwndToLabel = CreateStatic( Label, 10, 10, 75, 20, IDC_LABEL_TO, hwnd );
+			SetDefaultFont( IDC_LABEL_TO, hwnd );
+			memset( Label, '\0', 128 ); strcpy( Label, "to@To.com" );
+			hwndTo = CreateAddress( Label, 85, 10, 200, 20, IDC_TO, hwnd );
+			SetDefaultFont( IDC_TO, hwnd );
 			
-			hwndFromLabel = CreateStatic("From:", 10, 30, 75, 20, IDC_LABEL_FROM, hwnd);
-			SetDefaultFont(IDC_LABEL_FROM, hwnd);
-			hwndFrom = CreateAddress("from@From.com", 85, 30, 200, 20, IDC_FROM, hwnd);
-			SetDefaultFont(IDC_FROM, hwnd);
+			// From Fields
+			memset( Label, '\0', 128 ); strcpy( Label, "From: " );
+			hwndFromLabel = CreateStatic( Label, 10, 30, 75, 20, IDC_LABEL_FROM, hwnd );
+			SetDefaultFont( IDC_LABEL_FROM, hwnd );
+			memset( Label, '\0', 128 ); strcpy( Label, "from@From.com" );
+			hwndFrom = CreateAddress( Label, 85, 30, 200, 20, IDC_FROM, hwnd );
+			SetDefaultFont( IDC_FROM, hwnd );
 			
 			// Subect
-			hwndSubjectLabel = CreateStatic("Subject:", 10, 55, 75, 20, IDC_LABEL_SUBJECT, hwnd);
-			SetDefaultFont(IDC_LABEL_SUBJECT, hwnd);
-			hwndSubject = CreateAddress("Test Message", 85, 55, 200, 20, IDC_SUBJECT, hwnd);
-			SetDefaultFont(IDC_SUBJECT, hwnd);
+			memset( Label, '\0', 128 ); strcpy( Label, "Subject: " );
+			hwndSubjectLabel = CreateStatic( Label, 10, 55, 75, 20, IDC_LABEL_SUBJECT, hwnd );
+			SetDefaultFont( IDC_LABEL_SUBJECT, hwnd );
+			memset( Label, '\0', 128 ); strcpy( Label, "Test Message" );
+			hwndSubject = CreateAddress( Label, 85, 55, 200, 20, IDC_SUBJECT, hwnd );
+			SetDefaultFont( IDC_SUBJECT, hwnd );
 			
 			// Message Body
-			hwndEdit = CreateEdit("test test", 10, 80, 506, 215, IDC_EDIT, hwnd);
-			SetDefaultFont(IDC_EDIT, hwnd);
+			memset( Label, '\0', 128 ); strcpy( Label, "test test" );
+			hwndEdit = CreateEdit( Label, 10, 80, 506, 215, IDC_EDIT, hwnd );
+			SetDefaultFont( IDC_EDIT, hwnd );
 			
-			// Creates a button labeled "Click me!"
-			hwndButton = CreateButton("Send Message", 10, 300, 100, 25, IDC_BUTTON, hwnd);
-			SetDefaultFont(IDC_BUTTON, hwnd);
-			// Creates a checkbox
-			hwndCheck = CreateCheck("Reset Fields", 130, 300, 75, 20, IDC_CHECK, hwnd);
+			// Send Message Button
+			memset( Label, '\0', 128 ); strcpy( Label, "Send Message" );
+			hwndButton = CreateButton( Label, 10, 300, 100, 25, IDC_BUTTON, hwnd );
+			SetDefaultFont( IDC_BUTTON, hwnd );
+			// Reset Fields CheckBox
+			memset( Label, '\0', 128 ); strcpy( Label, "Reset Fields" );
+			hwndCheck = CreateCheck( Label, 130, 300, 75, 20, IDC_CHECK, hwnd );
 			SetDefaultFont(IDC_CHECK, hwnd);
+			memset( Label, '\0', 128 );
         break;
 		
         case WM_COMMAND:
@@ -486,8 +498,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						}
 						memset( Message, '\0', sizeof( Message ) );
 						
-						if( connectSMTP.SendData( "QUIT\n" ) )
-							MessageBox( popup, "QUIT\0", "End Data", MB_OK );
+						strcpy( Message, "QUIT\n" );
+						if( connectSMTP.SendData( Message ) )
+							MessageBox( popup, "QUIT", "End Data", MB_OK );
 						else {
 							MessageBox( popup, "Error", "Quit: ", MB_OK );
 							return 1;
