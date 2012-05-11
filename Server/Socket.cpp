@@ -24,7 +24,7 @@ void Socket::setUpSocket()
     WSADATA wsaData;
     if(WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR)
     {
-        eventLog("WSAStartup Error. Shutting down server", 0.0.0.0)
+        eventLog("WSAStartup Error. Shutting down server", "0.0.0.0");
         std::cerr << "Socket Initialization: Error with WSAStartup\n";
         system("pause");
         WSACleanup();
@@ -35,7 +35,7 @@ void Socket::setUpSocket()
 
     if (sock == INVALID_SOCKET)
     {
-        eventLog("Socket initialization error. Shutting down Server.", 0.0.0.0)
+        eventLog("Socket initialization error. Shutting down Server.", "0.0.0.0");
         std::cerr << "Socket Initialization: Error creating socket"<<std::endl;
         system("pause");
         WSACleanup();
@@ -62,7 +62,7 @@ bool Socket::RecvData(std::string &input)
 	int i = recv(sock, buffer, STRLEN, 0);
     if (i == SOCKET_ERROR)
     {
-        eventLog("Client disconnected unexpectedly.")
+        eventLog("Client disconnected unexpectedly.","0.0.0.0");
         std::cout << "Client disconnected unexpectedly\n";
         return false;
     }
@@ -77,7 +77,7 @@ bool Socket::RecvData(std::string &input)
 
 void Socket::CloseSocket()
 {
-    eventLog("Closed Socket", dstIP)
+    eventLog("Closed Socket", dstIP);
     closesocket(sock);
     sock = INVALID_SOCKET;
 }
@@ -86,7 +86,7 @@ void Socket::Listen(int numOfConnections)
 {
     if (listen(sock, numOfConnections) == SOCKET_ERROR)
     {
-        eventLog("ServerSocket: Error listening on socket", dstIP)
+        eventLog("ServerSocket: Error listening on socket", dstIP);
         std::cerr << "ServerSocket: Error listening on socket\n";
         system("pause");
         WSACleanup();
@@ -114,7 +114,7 @@ void Socket::Bind(int port)
     if (bind(sock,(SOCKADDR*) &myAddress, sizeof( myAddress)) == SOCKET_ERROR)
     {
         std::cerr << "Socket: Failed to bind\n";
-        eventLog("Socket failed to bind", 0.0.0.0)
+        eventLog("Socket failed to bind", "0.0.0.0");
         system("pause");
         WSACleanup();
         exit(14);
