@@ -17,7 +17,8 @@ HANDLE eventLock;
 
 string registeredName;
 int Message_Queue;
-std::string DNS_IP;
+string DNS_IP;
+int PORT;
 
 int main()
 {

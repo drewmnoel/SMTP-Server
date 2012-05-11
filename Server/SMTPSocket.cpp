@@ -7,6 +7,8 @@
 #include "ClientThread.h"
 #include "ForwardThread.h"
 
+extern int PORT;
+
 //Name: setUp
 //Parameters: none
 //Returns: none

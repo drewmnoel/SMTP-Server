@@ -5,6 +5,8 @@
 
 #include "ForwardThread.h"
 
+extern int PORT;
+
 ForwardThread::ForwardThread()
 {
 }
@@ -168,7 +170,7 @@ void ForwardThread::dnsLookup(string toLookup)
 		else
 		{
 			relay = new Socket();
-			if (!relay->Connect(response,25)) 
+			if (!relay->Connect(response,PORT)) 
 			{
 				validRelay = false;
 				return;

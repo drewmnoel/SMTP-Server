@@ -17,7 +17,6 @@ private:
 
     //Ports used by the DNS server and our SMTP Server
 	int DNS_PORT;
-	int PORT;
 
 public:
     //Method to setup client connection and SMTP session
