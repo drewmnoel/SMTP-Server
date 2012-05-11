@@ -1,3 +1,8 @@
+//Project.setAuthors("Richard Couillard", "Alexander Leary", "Daniel Mercado", "Scott Fenwick");
+//Assignment: SMTP
+//File: SMTPSocket.cpp
+//Purpose: Definition of the SMTPSocket class
+
 #include "SMTPSocket.h"
 #include "ClientThread.h"
 

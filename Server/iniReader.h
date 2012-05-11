@@ -1,7 +1,7 @@
 /*
  * File: iniReader.h
  * Author: benmaynard
- *
+ * Purpose: Declaration of iniReader.h
  * Created on August 26, 2010, 2:49 PM
  */
 

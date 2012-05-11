@@ -1,3 +1,8 @@
+//Project.setAuthors("Richard Couillard", "Alexander Leary", "Daniel Mercado", "Scott Fenwick");
+//Assignment: SMTP
+//File: ClientThread.cpp
+//Purpose: Definition of the ClientThread class
+
 #include "ClientThread.h"
 #include <iostream>
 #include <regex>

@@ -1,7 +1,7 @@
 /*
  * File: iniReader.c++
  * Author: benmaynard
- *
+ * Purpose: Definition of iniReader.cpp
  * Created on August 26, 2010, 2:49 PM
  */
 
