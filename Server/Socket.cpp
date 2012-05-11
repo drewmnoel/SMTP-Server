@@ -13,6 +13,12 @@ Socket::Socket(SOCKET _sock, std::string _dstIP)
     dstIP = _dstIP;
 }
 
+Socket::~Socket()
+{
+    CloseSocket();
+    WSACleanup();
+}
+
 void Socket::setUpSocket()
 {
     WSADATA wsaData;

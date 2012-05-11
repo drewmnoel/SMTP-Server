@@ -116,7 +116,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
                 {
                     eventLog("Domain not registered", "0.0.0.0");
                		cout << "Domain not registered\n";
-               		//*Put it at the end of the file
+               		//Put it at the end of the file
                     validRelay = false;
                     return 0;
             	}
