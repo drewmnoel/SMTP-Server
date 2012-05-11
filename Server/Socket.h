@@ -14,7 +14,6 @@ private:
 	std::string dstIP;
 public:
 	Socket();
-	~Socket();
 	Socket(SOCKET,std::string);
 	void setUpSocket();
 	void SendData(std::string);
