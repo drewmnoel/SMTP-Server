@@ -121,6 +121,13 @@ void Socket::Bind(int port)
     }
 }
 
+//Name: Connect
+//Parameters: 2
+//    ip    - the IP the server is connecting to
+//    port  - The port that the server will connect to
+//Returns: 2
+//    True  - Connection Failure
+//    False - Connection failure
 bool Socket::Connect(std::string ip, int port)
 {
     sockaddr_in myAddress;
@@ -137,6 +144,7 @@ bool Socket::Connect(std::string ip, int port)
 
 	if (connect(sock, (SOCKADDR*) &myAddress,sizeof(myAddress)) == SOCKET_ERROR)
 	{
+	    eventLog("Failed to connect", ipAddress);
 		std::cerr << "Failed to connect to: " << ipAddress << ":" << port << std::endl;
 		WSACleanup();
 		return false;
