@@ -27,7 +27,7 @@ Socket::Socket()
 		if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
 			throw "Socket Initialization: Error with WSAStartup\n";
     } catch( char* str ) {
-		cerr << "Exception raised: " << str << '\n';
+		cerr << "Exception raised: " << str << endl;
         system("pause");
         WSACleanup();
         exit(10);
@@ -39,7 +39,7 @@ Socket::Socket()
 		if ( mySocket == INVALID_SOCKET )
 			throw "Socket Initialization: Error creating socket";
 	} catch( char* str ) {
-        cerr << "Exception raised: " << str << '\n';
+        cerr << "Exception raised: " << str << endl;
         system("pause");
         WSACleanup();
         exit(11);
@@ -220,8 +220,8 @@ void ServerSocket::Listen( int connections )
 	try {
 		if ( listen ( mySocket, connections ) == SOCKET_ERROR )
 			throw "ServerSocket: Error listening on socket\n";
-	catch( char* str ) {
-        cerr << "Exception raised: " << str << '\n';
+	} catch( char* str ) {
+        cerr << "Exception raised: " << str << endl;
         system( "pause" );
         WSACleanup( );
         exit( 15 );
@@ -432,13 +432,13 @@ void ClientSocket::ConnectToServer( const char *ipAddress, int port )
     myAddress.sin_addr.s_addr = inet_addr( ipAddress );
     myAddress.sin_port = htons( port );
     
-    //cout<<"CONNECTED"<<endl;
-
-    if ( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
-    {
-        cerr << "ClientSocket: Failed to connect\n";
+	try {
+	    if ( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
+			throw "ClientSocket: Failed to connect\n";
+	} catch( char* str ) {
+        cerr << "Exception raised: " << str << endl;
         system( "pause" );
         WSACleanup( );
         exit( 20 );
-    } 
+    }
 }
