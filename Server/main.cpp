@@ -1,22 +1,8 @@
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <cstdio>
-#include <windows.h>
-#include <sstream>
-#include <regex>
-#include <ctime>
-#include <fstream>
-#include "Socket.h"
-#include "iniReader.h"
-
-using namespace std;
+#include "SMTPSocket.h"
 
 //start prototypes
-SOCKET dnsRegister(string, string, string);
 DWORD WINAPI clientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);
-void eventLog(string info, string ip);
 //end prototypes
 
 //start Mutexs
@@ -25,281 +11,32 @@ HANDLE fileLock;
 HANDLE eventLock;
 //end mutexs
 
-//star global vars
-string registered_name;
-int Message_Queue = 0;
-string DNS_NAME_BACKUP;
-string DNS_NAME;
-string DNS_IP;
-int DNS_PORT;
-int PORT;
-//end global vars
-
-//client and file thread arg struct
-struct clientAndDns
-{
-	SOCKET client;
-	string cIP;
-	SOCKET dns;
-};
+string registeredName;
+int Message_Queue;
+std::string DNS_IP;
 
 int main()
 {
-    //start config
-	parseIniFile("sample.ini");
-    eventLog("Server settings loaded from config", "0.0.0.0");
-	DNS_NAME_BACKUP = getOptionToString("DNS_NAME_BACKUP");
-	DNS_NAME = getOptionToString("DNS_NAME");
-	DNS_IP = getOptionToString("DNS_IP");
-	DNS_PORT = getOptionToInt("DNS_PORT");
-	PORT = getOptionToInt("PORT");
-	//end config
-
-	//register dns name
-	SOCKET dnsSocket = dnsRegister(DNS_IP, DNS_NAME, DNS_NAME_BACKUP);
-
-    //start mutex creation
+	Message_Queue = 0;
 	eventLock = CreateMutex(NULL, FALSE, NULL);
-	if (eventLock == NULL)
-	{
-		return (1);
-	}
-	eventLog("Created eventlog mutex", "0.0.0.0");
-
 	dnsLock = CreateMutex(NULL, FALSE, NULL);
-	if (dnsLock == NULL)
-	{
-		return (1);
-	}
-	eventLog("Created DNS mutex", "0.0.0.0");
-
 	fileLock = CreateMutex(NULL, FALSE, NULL);
-	if (fileLock == NULL)
+
+	if (!eventLock || !dnsLock || !fileLock)
 	{
 		return (1);
 	}
-	eventLog("Created file mutex", "0.0.0.0");
-    //end mutex creation
 
-	//start server startup
-	SOCKET server = setUpSocket();
-	Bind(server, PORT);
-	Listen(server, 99);
-    eventLog("Successfully set up server socket. Listening", "0.0.0.0");
-    //end server startup
+	eventLog("Created mutexes", "0.0.0.0");
 
-	//create struct to pass the dns socket to the master buffer reader thread
-	clientAndDns justDns;
-	justDns.dns = dnsSocket;
-	//CreateThread(NULL, 0, fileThread, (LPVOID) &justDns, 0, &dwThreadId);
-
-	DWORD dwThreadId;
-
-	while (1)
-	{
-		//create struct to pass to client thread
-		clientAndDns temp;
-		temp.client = Accept(server, temp.cIP);
-		temp.dns = dnsSocket;
-
-		//Set up a client thread
-		if(CreateThread(NULL, 0, clientThread, (LPVOID) &temp, 0, &dwThreadId) == NULL)
-		{
-            eventLog("CreateThread() failed: " + (int)GetLastError(), temp.cIP);
-			printf("CreateThread() failed: %d\n", (int)GetLastError());
-			break;
-		}
-		else
-		{
-		    eventLog("Client accepted", temp.cIP);
-		}
-	}
-    //a thread couldnt be created so we just killed the whole server
+	SMTPSocket server;
+	server.run();
+    
 	system("pause");
 	return 0;
 }
 
-//register the dns name with the dns server
-SOCKET dnsRegister(string ip, string name, string backup)
-{
-	SOCKET temp;
-	temp = setUpSocket();
-	Connect(temp, ip, DNS_PORT);
-	string response;
-
-	//Send domain request to DNS server
-	SendData(temp, "iam " + name);
-	eventLog("Sent iam " + name + " to dns server", ip);
-	if(!RecvData(temp, response))
-	{
-	    eventLog("Quitting server dns connection was severed", "0.0.0.0");
-	    exit(1);
-	}
-    if (regex_match(response, (regex)"5\n*"))
-    {
-        //request a backup name from the DNS server
-        cout << "Name already taken. Trying backup name" << endl;
-        eventLog("Name \"" + name + "\" already taken. Trying backup name", "0.0.0.0");
-        SendData(temp, "iam " + backup);
-        if(!RecvData(temp, response))
-        {
-            eventLog("Quitting server dns connection was severed", "0.0.0.0");
-            exit(1);
-        }
-        if (regex_match(response, (regex)"5\n*"))
-        {
-            //Kill if both names are taken
-            cout << "Both names taken quitting server" << endl;
-            eventLog("Both names taken. Quitting server.", "0.0.0.0");
-            exit(1);
-        }
-        else
-        {
-            //Register backup
-            cout << "Using backup name" << endl;
-            eventLog("Using backup name", "0.0.0.0");
-            registered_name = DNS_NAME_BACKUP;
-            return temp;
-        }
-    }
-    //Register primary
-    cout << "First name registered successfully" << endl;
-    eventLog("First name registered successfully", "0.0.0.0");
-    registered_name = DNS_NAME;
-    return temp;
-}
-
-DWORD WINAPI clientThread(LPVOID lpParam)
-{
-    //put the struct passed into vars we can use
-	clientAndDns *temp = (clientAndDns*) lpParam;
-	SOCKET client = temp->client;
-	SOCKET dns = temp->dns;
-	string clientIP = temp->cIP;
-
-	//other vars we need
-    //bool validRelay;
-	stringstream completeMessage;
-	string response;
-	bool forwarded = false;
-
-	if (WaitForSingleObject(dnsLock, INFINITE) == WAIT_OBJECT_0)
-	{
-		//Test IP against DNS
-		SendData(dns, "who " + clientIP);
-		eventLog("Sent \"who " + clientIP + "\"", DNS_IP);
-
-		if(!RecvData(dns, response))
-		{
-		    eventLog("Quitting server dns connection was severed", "0.0.0.0");
-		    return 0;
-		}
-        //If 0, it's from a server, if not, it's from a client
-        if (regex_match(response, (regex)"0\n*"))
-        {
-            eventLog("Message is from a server",clientIP);
-            forwarded = true;
-        }
-        else
-        {
-            eventLog("Message is from a client",clientIP);
-        }
-        printf("message is from a %s\n", ((forwarded) ? "server" : "client"));
-	}
-	ReleaseMutex(dnsLock);
-
-    completeMessage << ((forwarded) ? "true\n" : "false\n");
-
-	//here is where we send and recieve data from the client
-	SendData(client, "220 " + registered_name + " ESMTP Postfix\n");
-	eventLog("220 " + registered_name + " ESMTP Postfix",clientIP);
-    string data = "";
-	if(!RecvData(client, data))
-	{
-	    eventLog("client disconnect",clientIP);
-        return 0;
-	}
-    if (!regex_match(data,(regex)"HELO .*\n*"))
-    {
-        SendData(client, "221 Closing Transmission Channel\n");
-        return 0;
-    }
-    SendData(client, "250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you\n");
-    eventLog("Sent 250 Hello " + ((data[(data.length()-1)] == '\n') ? data.substr(5,(data.length()-6)) : data.substr(5)) + ", I am glad to meet you", clientIP);
-    if(!RecvData(client, data))
-    {
-        eventLog("client disconnect",clientIP);
-        return 0;
-    }
-    while (!regex_match(data,(regex)"DATA\n*"))
-    {
-        if (regex_match(data, (regex)"MAIL FROM:<.+@.+>\n*"))
-        {
-            completeMessage << data;
-            eventLog("Sent FROM 250 OK", clientIP);
-            SendData(client,"250 OK\n");
-        }
-        else if (regex_match(data,(regex)"RCPT TO:<.+@.+>\n*"))
-        {
-            completeMessage << data;
-            eventLog("Sent RCPT 250 OK", clientIP);
-            SendData(client, "250 OK\n");
-        }
-        else
-        {
-            SendData(client, "500 Command Syntax Error\n");
-            eventLog("Sent 500 Command Syntax Error", clientIP);
-        }
-        if(!RecvData(client, data))
-        {
-            eventLog("client disconnect",clientIP);
-            return 0;
-        }
-    }
-    SendData(client, "354 End data with <CR><LF>.<CR><LF>\n");
-    eventLog("Sent 354 End data with <CR><LF>.<CR><LF>",clientIP);
-    completeMessage << data;
-    while (!regex_match(data,(regex)"\\.\n*"))
-    {
-        eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", clientIP);
-        if(!RecvData(client, data))
-        {
-            eventLog("client disconnect",clientIP);
-            return 0;
-        }
-        completeMessage << data;
-    }
-    Message_Queue += 1;
-    char mBuff[2];
-    sprintf(mBuff,"%d",Message_Queue);
-    SendData(client, "250 OK: queued as " + (string)mBuff + (string)"\n");
-    eventLog("Sent 250 OK: queued as " + Message_Queue, clientIP);
-
-    //write dat message down
-    if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
-	{
-		//write the email down
-		ofstream fin;
-		fin.open("master_baffer.woopsy", ios::app);
-		fin << completeMessage.str() << endl;
-		fin.close();
-	}
-	ReleaseMutex(fileLock);
-
-    //now look for the quit
-    while(!regex_match(data,(regex)"QUIT\n*"))
-    {
-        if(!RecvData(client, data))
-        {
-            eventLog("client disconnect after message queued",clientIP);
-            return 0;
-        }
-    }
-    SendData(client, "221 BYE\n");
-    eventLog("Sent 221 BYE", clientIP);
-    return 0;
-}
-
+/*
 DWORD WINAPI fileThread(LPVOID lpParam)
 {
 	clientAndDns *temp = (clientAndDns*) lpParam;
@@ -421,7 +158,7 @@ DWORD WINAPI fileThread(LPVOID lpParam)
 	ReleaseMutex(fileLock);
 	return 0;
 }
-
+*/
 //name: eventLog
 //Parameters: Info to be logged
 //Returns: none

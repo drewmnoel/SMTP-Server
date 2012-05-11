@@ -2,7 +2,18 @@
 #include "Socket.h"
 #include <iostream>
 
-SOCKET setUpSocket()
+Socket::Socket()
+{
+    sock = SOCKET_ERROR;
+}
+
+Socket::Socket(SOCKET _sock, std::string _dstIP)
+{
+    sock = _sock;
+    dstIP = _dstIP;
+}
+
+void Socket::setUpSocket()
 {
     WSADATA wsaData;
     if(WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR)
@@ -13,19 +24,18 @@ SOCKET setUpSocket()
         exit(10);
     }
 
-    SOCKET temp = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    if (temp == INVALID_SOCKET)
+    if (sock == INVALID_SOCKET)
     {
         std::cerr << "Socket Initialization: Error creating socket"<<std::endl;
         system("pause");
         WSACleanup();
         exit(11);
     }
-    return temp;
 }
 
-void SendData(SOCKET sock,std::string input)
+void Socket::SendData(std::string input)
 {
     char buffer[STRLEN];
     memset(buffer,0,STRLEN);
@@ -34,20 +44,17 @@ void SendData(SOCKET sock,std::string input)
         buffer[x] = input[x];
     }
     send(sock, buffer, strlen(buffer), 0);
+
+    eventLog("Sent: " + (std::string)buffer, dstIP);
 }
 
-bool RecvData(SOCKET sock,std::string &input)
+bool Socket::RecvData(std::string &input)
 {
 	char buffer[STRLEN];
 	memset(buffer, 0, STRLEN);
 	int i = recv(sock, buffer, STRLEN, 0);
     if (i == SOCKET_ERROR)
     {
-//        SOCKADDR_IN gettingIP;
-//        gettingIP.sin_family = AF_INET;
-//        int size = sizeof(gettingIP);
-//        getpeername(sock,(SOCKADDR*)&gettingIP,&size);
-//        std::cout << "Client " << (std::string)inet_ntoa(gettingIP.sin_addr) << " disconnected\n";
         std::cout << "client disconnected\n";
         return false;
     }
@@ -59,13 +66,13 @@ bool RecvData(SOCKET sock,std::string &input)
     }
 }
 
-void CloseSocket(SOCKET &sock)
+void Socket::CloseSocket()
 {
     closesocket(sock);
     sock = INVALID_SOCKET;
 }
 
-void Listen(SOCKET sock,int numOfConnections)
+void Socket::Listen(int numOfConnections)
 {
     if (listen(sock, numOfConnections) == SOCKET_ERROR)
     {
@@ -76,7 +83,7 @@ void Listen(SOCKET sock,int numOfConnections)
     }
 }
 
-SOCKET Accept(SOCKET sock,std::string &IP)
+SOCKET Socket::Accept(std::string &IP)
 {
     sockaddr_in cAddress;
     cAddress.sin_family = AF_INET;
@@ -86,7 +93,7 @@ SOCKET Accept(SOCKET sock,std::string &IP)
     return temp;
 }
 
-void Bind(SOCKET sock,int port)
+void Socket::Bind(int port)
 {
     sockaddr_in myAddress;
     myAddress.sin_family = AF_INET;
@@ -102,7 +109,7 @@ void Bind(SOCKET sock,int port)
     }
 }
 
-bool Connect(SOCKET sock,std::string ip, int port)
+bool Socket::Connect(std::string ip, int port)
 {
     sockaddr_in myAddress;
     char ipAddress[16];
@@ -123,4 +130,9 @@ bool Connect(SOCKET sock,std::string ip, int port)
 		return false;
 	}
 	return true;
+}
+
+SOCKET Socket::getSocket()
+{
+    return sock;
 }
