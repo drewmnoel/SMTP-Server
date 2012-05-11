@@ -4,86 +4,91 @@ void ForwardThread::run(LPVOID info)
 	Socks = (comm*) info;
 	dns = new Socket(Socks->dns, DNS_IP);
 
-	ifstream fin;
+	fstream fin;
 	bool forward;
 	stringstream fileBuffer;
 	string clientData, userName;
 
-	// Get the file mutex
-	DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
-	if (dwWaitResult == WAIT_OBJECT_0)
+	while(1)
 	{
-		fstream fin("master_baffer.woopsy", ios::in);
-
-		// True means server, false means local user
-		getline(fin, clientData);
-		if (clientData == "true")
-			forward = true;
-		else
-			forward = false;
-
-		//Store in the stringstream
-		fileBuffer << clientData << endl;
-
-        //Get the next line which would be the TO & store
-		getline(fin, clientData);
-		fileBuffer << clientData << endl;
-
-        //Keep reading in until you get to DATA
-		while (clientData != "DATA")
+		// Get the file mutex
+		DWORD dwWaitResult = WaitForSingleObject(fileLock, INFINITE);
+		if (dwWaitResult == WAIT_OBJECT_0)
 		{
+			fin.open("master_baffer.woopsy", ios::in);
+
+			// True means server, false means local user
+			getline(fin, clientData);
+			if (clientData == "true")
+				forward = true;
+			else
+				forward = false;
+
+			//Store in the stringstream
+			fileBuffer << clientData << endl;
+
+	        //Get the next line which would be the TO & store
 			getline(fin, clientData);
 			fileBuffer << clientData << endl;
-		}
 
-		//Keep reading in until the end of message marker
-		while (clientData != ".")
-		{
-			getline(fin, clientData);
-			fileBuffer << clientData << endl;
-		}
-
-		//Close the file and clear the clientData buffer
-		fin.close();
-		clientData = "";
-
-        //The user is local
-		if (!forward)
-		{
-			if (userName == "alex" || userName == "dan" || userName == "drew"
-					|| userName == "scott" || userName == "rich")
+	        //Keep reading in until you get to DATA
+			while (clientData != "DATA")
 			{
-                //Open the correct user file and append the string stream into it
-				fin.open((userName + ".txt").c_str(), ios::out | ios::app);
-				fin << fileBuffer.str();
-                eventLog("Stored entire message in " + userName + ".txt", "0.0.0.0");
-				fin.close();
+				getline(fin, clientData);
+				fileBuffer << clientData << endl;
 			}
+
+			//Keep reading in until the end of message marker
+			while (clientData != ".")
+			{
+				getline(fin, clientData);
+				fileBuffer << clientData << endl;
+			}
+
+			//Close the file and clear the clientData buffer
+			fin.close();
+			clientData = "";
+
+			/* We have read the entire message into memory */
+			/* Read the username */
+
+	        //The user is local
+			if (!forward)
+			{
+				if (userName == "alex" || userName == "dan" || userName == "drew"
+						|| userName == "scott" || userName == "rich")
+				{
+	                //Open the correct user file and append the string stream into it
+					fin.open((userName + ".txt").c_str(), ios::out | ios::app);
+					fin << fileBuffer.str();
+	                eventLog("Stored entire message in " + userName + ".txt", "0.0.0.0");
+					fin.close();
+				}
+				else
+				{
+					cerr << "No user " << userName << " exists on this server."
+							<< endl;
+				}
+			}
+
+			//We are forwarding the message
 			else
 			{
-				cerr << "No user " << userName << " exists on this server."
-						<< endl;
+				//TODO: Get the destination out of the RCPT TO:<x@y>
+				dnsLookup("");
+	            //now that we have an ip we can continue or we can end it here if invalid or whatever
+	            if (validRelay)
+	            {
+	                while (clientData != ".")
+	                {
+	                    getline(fileBuffer, clientData);
+	                    relay->SendData(clientData + "\n");
+	                }
+	            }
 			}
 		}
-
-		//We are forwarding the message
-		else
-		{
-			//TODO: Get the destination out of the RCPT TO:<x@y>
-			dnsLookup("");
-            //now that we have an ip we can continue or we can end it here if invalid or whatever
-            if (validRelay)
-            {
-                while (clientData != ".")
-                {
-                    getline(fileBuffer, clientData);
-                    relay->SendData(clientData + "\n");
-                }
-            }
-		}
+		ReleaseMutex(fileLock);
 	}
-	ReleaseMutex(fileLock);
-	return;
 }
 
 void ForwardThread::dnsLookup(string toLookup)

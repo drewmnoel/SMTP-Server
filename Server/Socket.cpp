@@ -27,12 +27,6 @@ Socket::Socket(SOCKET _sock, std::string _dstIP)
     dstIP = _dstIP;
 }
 
-Socket::~Socket()
-{
-    CloseSocket();
-    WSACleanup();
-}
-
 //Name: setUpSocket
 //Parameters: none
 //Returns: none
