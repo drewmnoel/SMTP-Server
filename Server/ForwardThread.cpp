@@ -40,7 +40,7 @@ void ForwardThread::run(LPVOID info)
 				// See if we got a RCPT TO
 				if(clientData.compare(4, clientData.length(), "RCPT"))
 				{
-					destServer = clientData.substr(clientData.find('@')+1);
+					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-3);
 				}
 			}
 
