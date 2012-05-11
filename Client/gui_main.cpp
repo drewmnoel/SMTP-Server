@@ -467,7 +467,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						hwndToChar( hwndEdit, convertBody );
 						strcat( messageBody, convertBody );
 						strcat( messageBody, "\n\0" );
-						if( connectSMTP.SendData( Message ) )
+						if( connectSMTP.SendData( messageBody ) )
 							MessageBox( popup, messageBody, "DATA", MB_OK );
 						else {
 							MessageBox( popup, "Error", "Body: ", MB_OK );
