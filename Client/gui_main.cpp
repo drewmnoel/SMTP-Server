@@ -252,9 +252,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						LRESULT checkState;
 						
 						static HWND popup;
-						char IPAddress[20] = "127.0.0.1";
-						char Message[128]; memset( Message, '\0', sizeof( Message ) );
-						char convert[128]; memset( convert, '\0', sizeof( convert ) );
+						char IPAddress[20] = "129.21.88.88";
+						char Message[128]; memset( Message, '\0', 128 );
+						char convert[128]; memset( convert, '\0', 128 );
 						static char endKey[1]; memset( endKey, '\0', sizeof( endKey ) );
 						//http://msdn.microsoft.com/en-us/library/system.windows.forms.textbox.autocompletesource.aspx
 						
@@ -263,7 +263,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
 						
 						ClientSocket connectSMTP;
-						connectSMTP.ConnectToServer( "127.0.0.1", 25 );
+						connectSMTP.ConnectToServer( IPAddress, 25 );
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) { //220 smtp.example.com ESMTP Postfix
 							if( checkError( Message ) )
@@ -278,7 +278,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, Message, "Error", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						
 						strcpy( Message, "HELO " );
@@ -292,8 +292,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "HELO", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) {
@@ -309,7 +309,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error" , "250 Ok", MB_OK );
 							return 1;
 						} 
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						
 						strcpy( Message, "MAIL FROM:<" );
@@ -322,8 +322,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "MAIL FROM", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) {
@@ -339,7 +339,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error" , "250 Ok", MB_OK );
 							return 1;
 						} 
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						
 						strcpy( Message, "RCPT TO:<" );
@@ -352,8 +352,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "RCPT TO", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) {
@@ -369,7 +369,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error" , "250 Ok", MB_OK );
 							return 1;
 						} 
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						
 						strcpy( Message, "DATA\n\0" );
@@ -379,7 +379,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "DATA", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) {
@@ -398,7 +398,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 								MessageBox( popup, endKey, "354 End Data", MB_OK );
 							}
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						/*
 						 *
@@ -416,8 +416,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "From: <>", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						strcpy( Message, "To: <" );
 						hwndToChar( hwndTo, convert );
@@ -429,8 +429,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "To: <>", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						strcpy( Message, "Date: " );
 						char date[10]; _strdate( date );
@@ -446,7 +446,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "Date: ", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						strcpy( Message, "Subject: " );
 						hwndToChar( hwndSubject, convert );
@@ -458,8 +458,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "Subject: ", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
-						memset( convert, '\0', sizeof( convert ) );
+						memset( Message, '\0', 128 );
+						memset( convert, '\0', 128 );
 						
 						char* convertBody = (char*)malloc(4096); memset( convertBody, '\0', sizeof( convertBody ) ); 
 						char* messageBody = (char*)malloc(4096); memset( messageBody, '\0', sizeof( messageBody ) );
@@ -488,20 +488,22 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "End Data: ", MB_OK );
 							return 1;
 						}
+						memset( Message, '\0', 128 );
 						
 						if( connectSMTP.RecvData( Message ) ) {
 							if( checkError( Message ) )
 								break;
-							char* findQueued = strstr( Message, "queued as " );
-							char queued[100]; memset( queued, '\0', sizeof( queued ) );
-							strncpy( queued, findQueued + 9, strlen( Message ) - 17 );
-							MessageBox( popup, queued , "queued as", MB_OK );
+							if( strncmp( Message, "250", 3 ) != 0) {
+								SetWindowText(hwndFrom, "");
+								return 1;
+							}
+							MessageBox( popup, Message , "queued as", MB_OK );
 						}
 						else {
 							MessageBox( popup, "Error", "Queued: ", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						strcpy( Message, "QUIT\n" );
 						if( connectSMTP.SendData( Message ) )
@@ -509,7 +511,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						else {
 							MessageBox( popup, "Error", "Quit: ", MB_OK );
 							return 1;
-						}
+						} 
+						memset( Message, '\0', 128 );
 						
 						if( connectSMTP.RecvData( Message, 128 ) ) {
 							if( checkError( Message ) )
@@ -520,7 +523,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							MessageBox( popup, "Error", "End: ", MB_OK );
 							return 1;
 						}
-						memset( Message, '\0', sizeof( Message ) );
+						memset( Message, '\0', 128 );
 						
 						// Check the checkbox and clear the fields if checked
 						checkState = SendDlgItemMessage( hwnd, IDC_CHECK, BM_GETCHECK, 0, 0 ); 
