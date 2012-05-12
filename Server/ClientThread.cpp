@@ -89,23 +89,19 @@ void ClientThread::run(LPVOID info)
     completeMessage << data;
 
     //Keep building up the complete message until the delimiter is reached
-    bool done = false;
-    while (!done)
+    while (1)
     {
         if(data.length() >= 3)
         {
             if(regex_match(data.substr(data.length()-3), (regex)"\n\\.\n"))
-                done = true;
+                break;
         }
         //Possible double log?
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", Socks->clientInfo);
-        if(!done)
+        if(!client->RecvData(data))
         {
-            if(!client->RecvData(data))
-            {
-                eventLog("Client disconnected unexpectedly", Socks->clientInfo);
-                return;
-            }
+            eventLog("Client disconnected unexpectedly", Socks->clientInfo);
+            return;
         }
         //Actual building of complete message
         completeMessage << data;
