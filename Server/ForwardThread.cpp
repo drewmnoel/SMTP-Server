@@ -23,14 +23,16 @@ void ForwardThread::run(LPVOID info)
 
 	while(1)
 	{
+		fileBuffer.str("");
+		restOfFile.str("");
 		Sleep(1000);
 		// Get the file mutex
 		if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 		{
-			
 			fin.open("master_baffer.woopsy", ios::in);
 			if(!fin.is_open())
 			{
+				fin.close();
 				ReleaseMutex(fileLock);
 				continue;
 			}
@@ -42,6 +44,7 @@ void ForwardThread::run(LPVOID info)
 
 			if(fin.eof())
 			{
+				fin.close();
 				ReleaseMutex(fileLock);
 				continue;
 			}
@@ -49,8 +52,6 @@ void ForwardThread::run(LPVOID info)
 				finalDestination = true;
 			else
 				finalDestination = false;
-
-
 
 			//Store in the stringstream
 			//fileBuffer << clientData << endl;
@@ -89,7 +90,7 @@ void ForwardThread::run(LPVOID info)
 
 			remove("master_baffer.woopsy");
 			fin.open("master_baffer.woopsy", ios::out);
-			fin << restOfFile.rdbuf();
+			fin << restOfFile.str();
 			fin.close();
 
 			clientData = "";
@@ -122,20 +123,43 @@ void ForwardThread::run(LPVOID info)
 			{
 				dnsLookup(destServer);
 
-				relay.SendData("HELO " + registeredName);
-	            Sleep(50);
+				relay.RecvData(clientData);
+				relay.SendData("HELO " + registeredName + "\n");
 
 	            //now that we have an ip we can continue or we can end it here if invalid or whatever
+	            bool inData = false;
 	            if (validRelay)
 	            {
 	                while (clientData != ".")
 	                {
-	                    getline(fileBuffer, clientData);
-	                    relay.SendData(clientData + "\n");
-	                    Sleep(50);
+	                	if(clientData == "DATA")
+	                	{
+	                		inData = true;
+	                		relay.RecvData(clientData);
+	                		cout << clientData << endl; cout.flush();
+	                	}
+	                	else if(!inData)
+	                	{
+	                		relay.RecvData(clientData);
+	                		cout << clientData << endl; cout.flush();
+	                	}
+
+                		getline(fileBuffer, clientData);
+
+                		if(clientData == ".")
+                			Sleep(250);
+                		relay.SendData(clientData + "\n");
+                    	cout << clientData << endl; cout.flush();
 	                }
 	            }
+	           	getline(fileBuffer, clientData);
+	           	cout << clientData << endl; cout.flush();
+	            relay.RecvData(clientData);
+	            cout << clientData << endl; cout.flush();
+
+	            relay.SendData("QUIT\n");
 			}
+			relay.CloseSocket();
 			ReleaseMutex(fileLock);
 		
 		}
