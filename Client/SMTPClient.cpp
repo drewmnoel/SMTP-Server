@@ -27,29 +27,29 @@ SMTPClient::~SMTPClient( )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::recieve220( )
-//Purpose:   Starts communicating  with the server by reciving an identifying 
+//Purpose:   Starts communicating  with the server by reciving an identifying
 //			 message; e.g. 220 smtp.example.com ESMTP Postfix
 //Variables: messageIn
 //Returns:   bool
 //------------------------------------------------------------------------------
 bool SMTPClient::recieve220( HWND popup )
 {
-	if( RecvData( messageIn, 128 ) ) 
+	if( RecvData( messageIn, 128 ) )
 	{
 		if( checkError( messageIn ) )
 			return false;
-		if( strncmp( messageIn, "220", 3 ) != 0) 
+		if( strncmp( messageIn, "220", 3 ) != 0)
 		{
 			return false;
 		}
 		//MessageBox( popup, messageOut, "220", MB_OK );
 	}
-	else 
+	else
 	{
 		MessageBox( popup, messageIn, "Error Recieving Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageIn, '\0', 128 );
 	return true;
 }
@@ -68,18 +68,18 @@ bool SMTPClient::sendHELO( HWND hwndFrom, HWND popup )
 	removeUser( convert );
 	strcat( messageOut, convert );
 	strcat( messageOut, "\n\0" );
-	
-	if( SendData( messageOut ) ) 
+
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "HELO", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(HELO)", 
+		MessageBox( popup, "Error Sending Data(HELO)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageIn, '\0', 128 );
 	memset( convert, '\0', 128 );
 	return true;
@@ -87,30 +87,30 @@ bool SMTPClient::sendHELO( HWND hwndFrom, HWND popup )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::recieve250( )
-//Purpose:   Recieves an 250 Ok signal from the server to verify last 
-//			 communication. 
+//Purpose:   Recieves an 250 Ok signal from the server to verify last
+//			 communication.
 //Variables: message
 //Returns:   bool
 //------------------------------------------------------------------------------
 bool SMTPClient::recieve250( HWND popup )
 {
-	if( RecvData( messageIn, 128 ) ) 
+	if( RecvData( messageIn, 128 ) )
 	{
 		if( checkError( messageIn ) )
 			return false;
-		if( strncmp( messageIn, "250", 3 ) != 0) 
+		if( strncmp( messageIn, "250", 3 ) != 0)
 		{
 			return false;
 		}
 		//MessageBox( popup, messageOut , "250 Ok", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Recieving Data(250 Ok)", 
+		MessageBox( popup, "Error Recieving Data(250 Ok)",
 							"Error Recieving Data", MB_OK );
 		return false;
-	} 
-	
+	}
+
 	memset( messageIn, '\0', 128 );
 	return true;
 }
@@ -127,26 +127,26 @@ bool SMTPClient::sendMailFrom( HWND hwndFrom, HWND popup )
 	hwndToChar( hwndFrom, convert );
 	strcat( messageOut, convert );
 	strcat( messageOut, ">\n\0" );
-	
-	if( SendData( messageOut ) ) 
+
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "MAIL FROM", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(MAIL FROM)", 
+		MessageBox( popup, "Error Sending Data(MAIL FROM)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageOut, '\0', 128 );
 	memset( convert, '\0', 128 );
 	return true;
 }
 
 //------------------------------------------------------------------------------
-//Meathod:   Socket::ClientSocket::SMTPClient::sendRecieptTo( ) 
-//Purpose:   Sends the reciept to address portion of the header in the mail 
+//Meathod:   Socket::ClientSocket::SMTPClient::sendRecieptTo( )
+//Purpose:   Sends the reciept to address portion of the header in the mail
 //			 message. Can handle multiple addresses using ";" as delimiter.
 //Variables: hwndTo, popup, convert, messageOut, allAddresses, singleAddresses
 //Returns:   bool
@@ -158,32 +158,32 @@ bool SMTPClient::sendRecieptTo( HWND hwndTo, HWND popup )
 	string allAddresses = convert;
 	string singleAddress;
 	size_t pos = 0;
-	
-	do { 
+
+	do {
 		pos = allAddresses.find_first_of( ";" );
 		singleAddress = allAddresses.substr( 0, pos );
 		strcpy( messageOut, "RCPT TO:<");
 		strcat( messageOut, singleAddress.c_str( ) );
 		strcat( messageOut, ">" );
-		
+
 		if( SendData( messageOut ) )
 		{
 			//MessageBox( popup, messageOut, "RCPT TO", MB_OK );
 		}
-		else 
+		else
 		{
-			MessageBox( popup, "Error Sending Data(RECP TO)", 
+			MessageBox( popup, "Error Sending Data(RECP TO)",
 								"Error Sending Data", MB_OK );
 			return false;
 		}
-		
+
 		memset( convert, '\0', 128 );
 		allAddresses.erase( 0, pos + 1 );
 		if( allAddresses.find_first_of( " " ) == 0 )
 			allAddresses.erase( 0, 1 );
 		recieve250( popup );
 	} while( allAddresses.length( ) > 1 );
-	
+
 	memset( messageOut, '\0', 128 );
 	memset( convert, '\0', 128 );
 	return true;
@@ -199,13 +199,13 @@ bool SMTPClient::sendRecieptTo( HWND hwndTo, HWND popup )
 bool SMTPClient::data( HWND popup )
 {
 	strcpy( messageOut, "DATA\n\0" );
-	if( SendData( messageOut ) ) 
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, Message, "DATA", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(DATA)", 
+		MessageBox( popup, "Error Sending Data(DATA)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
@@ -222,11 +222,11 @@ bool SMTPClient::data( HWND popup )
 //------------------------------------------------------------------------------
 bool SMTPClient::recieve354( HWND popup )
 {
-	if( RecvData( messageIn, 128 ) ) 
+	if( RecvData( messageIn, 128 ) )
 	{
 		if( checkError( messageIn ) )
 			return false;
-		if( strncmp( messageIn, "354", 3 ) != 0) 
+		if( strncmp( messageIn, "354", 3 ) != 0)
 		{
 			return false;
 		}
@@ -240,7 +240,7 @@ bool SMTPClient::recieve354( HWND popup )
 	}
 	else
 	{
-		MessageBox( popup, "Error Recieving Data(354 Terminating Character)", 
+		MessageBox( popup, "Error Recieving Data(354 Terminating Character)",
 							"Error Recieving Data", MB_OK );
 		return false;
 	}
@@ -250,7 +250,7 @@ bool SMTPClient::recieve354( HWND popup )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::recieve220()
-//Purpose:   Starts communicating  with the server by reciving an identifying 
+//Purpose:   Starts communicating  with the server by reciving an identifying
 //			 message; e.g. 220 smtp.example.com ESMTP Postfix
 //Variables: messageOut
 //Returns:   bool
@@ -261,110 +261,116 @@ bool SMTPClient::sendMessage( HWND hwndTo, HWND hwndFrom, HWND hwndSubject, HWND
 	hwndToChar( hwndFrom, convert );
 	strcat( messageOut, convert );
 	strcat( messageOut, ">\n\0" );
-	
-	if( SendData( messageOut ) ) 
+
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "DATA", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(From <>)", 
+		MessageBox( popup, "Error Sending Data(From <>)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageOut, '\0', 128 );
 	memset( convert, '\0', 128 );
-	
+
 	strcpy( messageOut, "To: <" );
 	hwndToChar( hwndTo, convert );
 	strcat( messageOut, convert );
 	strcat( messageOut, ">\n\0" );
-	
-	if( SendData( messageOut ) ) 
+
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "DATA", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(To <>)", 
+		MessageBox( popup, "Error Sending Data(To <>)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageOut, '\0', 128 );
 	memset( convert, '\0', 128 );
-						
-	strcpy( messageOut, "Date: " );
-	char date[10]; _strdate( date );
-	strcat( messageOut, date );
-	strcat( messageOut, " " );
-	char time[10]; _strtime( time );
-	strcat( messageOut, time );
+
+	char timebuf [80];
+    struct tm * timeinfo;
+    time_t tod;
+    timeinfo = localtime(&tod);
+    strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
+	strcpy( messageOut, "Time: " );
+	//char date[10]; _strdate( date );
+	//strcat( messageOut, date );
+	//strcat( messageOut, " " );
+	//char time[10]; _strtime( time );
+	//strcat( messageOut, time );
+	strcat( messageOut, timebuf );
 	strcat( messageOut, "\n\0" );
 
-	if( SendData( messageOut ) ) 
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "DATA", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(Date)", 
+		MessageBox( popup, "Error Sending Data(Date)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageOut, '\0', 128 );
-	
+
 	strcpy( messageOut, "Subject: " );
 	hwndToChar( hwndSubject, convert );
 	strcat( messageOut, convert );
 	strcat( messageOut, "\n\0" );
-	
-	if( SendData( messageOut ) ) 
+
+	if( SendData( messageOut ) )
 	{
 		//MessageBox( popup, messageOut, "DATA", MB_OK );
 	}
 	else {
-		MessageBox( popup, "Error Sending Data(Subject)", 
+		MessageBox( popup, "Error Sending Data(Subject)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	memset( messageOut, '\0', 128 );
 	memset( convert, '\0', 128 );
-	
+
 	char* convertBody;
 	char* messageBody;
-	
+
 	try {
 		convertBody = (char*)malloc(4096);
 		messageBody = (char*)malloc(4096);
 	} catch( bad_alloc& ) {
-		MessageBox( popup, "Error Allocating Memory", 
+		MessageBox( popup, "Error Allocating Memory",
 							"Error Allocating Memory", MB_OK );
 		return false;
 	}
 	memset( messageBody, '\0', sizeof( messageBody ) );
 	memset( convertBody, '\0', sizeof( convertBody ) );
-	
+
 	strcpy( messageBody, "\n" );
 	hwndToChar( hwndEdit, convertBody );
 	strcat( messageBody, convertBody );
 	strcat( messageBody, "\n\0" );
-	
-	if( SendData( messageBody ) ) 
+
+	if( SendData( messageBody ) )
 	{
 		//MessageBox( popup, messageBody, "DATA", MB_OK );
 		//cout << messageBody << endl;
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(Body)", 
+		MessageBox( popup, "Error Sending Data(Body)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
-	
+
 	free( convertBody );
 	free( messageBody );
 }
@@ -378,14 +384,14 @@ bool SMTPClient::sendMessage( HWND hwndTo, HWND hwndFrom, HWND hwndSubject, HWND
 //------------------------------------------------------------------------------
 bool SMTPClient::return354( HWND popup )
 {
-	if( SendData( endKey ) ) 
+	if( SendData( endKey ) )
 	{
 		//MessageBox( popup, endKey, "End Data", MB_OK );
 		cout << endKey << endl;
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Sending Data(QUIT)", 
+		MessageBox( popup, "Error Sending Data(QUIT)",
 							"Error Sending Data", MB_OK );
 		return false;
 	}
@@ -395,26 +401,26 @@ bool SMTPClient::return354( HWND popup )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::recieveQueue()
-//Purpose:   Recieves the message queue number from the server 
+//Purpose:   Recieves the message queue number from the server
 //Variables: popup, messageIn
 //Returns:   bool
 //------------------------------------------------------------------------------
 bool SMTPClient::recieveQueue( HWND popup )
 {
-	if( RecvData( messageIn, 128 ) ) 
+	if( RecvData( messageIn, 128 ) )
 	{
 		if( checkError( messageIn ) )
 			return false;
-		else if( strncmp( messageIn, "250", 3 ) != 0) 
+		else if( strncmp( messageIn, "250", 3 ) != 0)
 		{
 			return false;
 		}
 		cout << messageIn << endl;
 		//MessageBox( popup, messageIn , "queued as", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Recieving Data(Queue)", 
+		MessageBox( popup, "Error Recieving Data(Queue)",
 							"Error Recieving Data", MB_OK );
 		return false;
 	}
@@ -424,7 +430,7 @@ bool SMTPClient::recieveQueue( HWND popup )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::sendQuit()
-//Purpose:   Starts communicating  with the server by reciving an identifying 
+//Purpose:   Starts communicating  with the server by reciving an identifying
 //			 message; e.g. 220 smtp.example.com ESMTP Postfix
 //Variables: message
 //Returns:   bool
@@ -436,34 +442,34 @@ bool SMTPClient::sendQuit( HWND popup )
 		{
 			MessageBox( popup, messageOut, "End Data", MB_OK );
 		}
-		else 
+		else
 		{
-			MessageBox( popup, "Error Sending Data(QUIT)", 
+			MessageBox( popup, "Error Sending Data(QUIT)",
 							"Error Sending Data", MB_OK );
 			return false;
-		} 
+		}
 		memset( messageOut, '\0', 128 );
 		return true;
 }
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::ClientSocket::SMTPClient::recieveEnd()
-//Purpose:   Starts communicating  with the server by reciving an identifying 
+//Purpose:   Starts communicating  with the server by reciving an identifying
 //			 message; e.g. 220 smtp.example.com ESMTP Postfix
 //Variables: message
 //Returns:   bool
 //------------------------------------------------------------------------------
 bool SMTPClient::recieveEnd( HWND popup )
 {
-	if( RecvData( messageIn, 128 ) ) 
+	if( RecvData( messageIn, 128 ) )
 	{
 		if( checkError( messageIn ) )
 			return false;
 		MessageBox( popup, messageIn , "End", MB_OK );
 	}
-	else 
+	else
 	{
-		MessageBox( popup, "Error Recieving Data(End)", 
+		MessageBox( popup, "Error Recieving Data(End)",
 							"Error Recieving Data", MB_OK );
 		return false;
 	}
@@ -485,12 +491,12 @@ bool SMTPClient::checkError( char* temp )
 		MessageBox( error, "421: Service Not Available", "Error Code", MB_OK );
 		return true;
 	}
-	else if( strncmp( temp, "447", 3 ) == 0 ) 
+	else if( strncmp( temp, "447", 3 ) == 0 )
 	{
 		MessageBox( error, "447: Outgoing Message Timeout", "Error Code", MB_OK );
 		return true;
 	}
-	else if( strncmp( temp, "500", 3 ) == 0 ) 
+	else if( strncmp( temp, "500", 3 ) == 0 )
 	{
 		MessageBox( error, "500: Command Syntax Error", "Error Code", MB_OK );
 		return true;
@@ -539,7 +545,7 @@ void SMTPClient::removeUser( char* temp )
 //------------------------------------------------------------------------------
 void SMTPClient::hwndToChar( HWND convert, char* temp )
 {
-	int length = GetWindowTextLength( convert ) + 1; 
+	int length = GetWindowTextLength( convert ) + 1;
 	GetWindowText( convert, temp, length );
 	temp[length] = '\0';
 }

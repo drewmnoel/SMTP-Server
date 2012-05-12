@@ -2,11 +2,11 @@
 //Course:           4050-212
 //Modified By :     Alexander Leary
 //Name:             Socket.cpp
-//File Purpose:     This is the classes source file for the server portion of 
-//                  the project containing Socket and ServerSocket 
+//File Purpose:     This is the classes source file for the server portion of
+//                  the project containing Socket and ServerSocket
 //------------------------------------------------------------------------------
 
-//Be sure to properly exit the program so that a recieve loop doesn't occur, 
+//Be sure to properly exit the program so that a recieve loop doesn't occur,
 //it kinda mucks up the log file with entries
 
 #include "gui_socket.h"
@@ -18,12 +18,12 @@ struct passedInfo
 	SOCKET passedSocket;
 	int conCount;
 };
-HANDLE ghMutex; 
+HANDLE ghMutex;
 
 Socket::Socket( )
 {
 	//WSAStartup
-    try { 
+    try {
 		if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
 			throw "Socket Initialization: Error with WSAStartup\n";
     } catch( char* str ) {
@@ -49,7 +49,7 @@ Socket::Socket( )
     myBackup = mySocket;
 	logOut.open("logfile.csv", ios::out | ios::app);
 	std::string title = "\"New Session\"\n\"Date\",\"Time\",\"Source Address\",\"Port\",\"Message\"\n";
-	if( logOut.is_open( ) ) 
+	if( logOut.is_open( ) )
 		logOut<<title;
 }
 
@@ -112,7 +112,7 @@ void Socket::GetAndSendMessage( )
     //fflush(stdin);
 }
 
-DWORD WINAPI ReceiveCommand( LPVOID lpParam ) 
+DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 {
 	//cout << "Thread created: " << GetCurrentThreadId() << endl;
 	struct passedInfo *current = ( struct passedInfo* ) lpParam;
@@ -121,21 +121,21 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 	int res;
 	strcpy( sendBuf, "Hello little friend" );
 	send( current_client, sendBuf, sizeof( sendBuf ), 0 );
-	
-	while( true ) 
+
+	while( true )
 	{
 		DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
-		switch ( dwWaitResult ) 
+		switch ( dwWaitResult )
         {
 			case WAIT_OBJECT_0:
 				memset( sendBuf, '\0', strlen( sendBuf ) );
 				memset( recvBuf, '\0', strlen( recvBuf ) );
-				
+
 				//cout << "---Waiting---\n";
 				res = recv( current_client, recvBuf, sizeof( recvBuf ), 0 );
 				recvBuf[strlen( recvBuf )] = '\0';
 				//cout << "Received in thread " << GetCurrentThreadId( ) <<": " << recvBuf;
-				
+
 				if( strcmp( "quit\n\0", recvBuf ) == 0 )
 				{
 					//cout << "Ending Thread " << GetCurrentThreadId( ) << endl;
@@ -170,7 +170,7 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 				}
 				else
 				{
-					//cout << "Send in thread " << GetCurrentThreadId() <<": "; 
+					//cout << "Send in thread " << GetCurrentThreadId() <<": ";
 					//cin.get( sendBuf, 100 );
 					send( current_client, sendBuf, sizeof( sendBuf ), 0);
 					//cin.clear( );
@@ -178,7 +178,7 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 				}
 				ReleaseMutex( ghMutex );
 				break;
-			case WAIT_ABANDONED: 
+			case WAIT_ABANDONED:
 				return FALSE;
 		}
     }
@@ -188,15 +188,22 @@ DWORD WINAPI ReceiveCommand( LPVOID lpParam )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::logConnectionInfo()
-//Purpose:   Logs connection information for a sockaddr_in and a corresponding 
+//Purpose:   Logs connection information for a sockaddr_in and a corresponding
 //           message.
 //Variables: date, time, socket->sin_addr, socket->sin_port
 //Returns:   void
 //------------------------------------------------------------------------------
-void Socket::logConnectionInfo( sockaddr_in *socket, char *buffer ) 
+void Socket::logConnectionInfo( sockaddr_in *socket, char *buffer )
 {
-    char date[10], time[10];
-	logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
+    //char date[10], time[10];
+	//logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
+
+    char timebuf [80];
+    struct tm * timeinfo;
+    time_t tod;
+    timeinfo = localtime(&tod);
+    strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
+    logOut << timebuf;
     logOut << ",\"" << inet_ntoa( socket->sin_addr ) << "\"";
     logOut << ",\"" << htons( socket->sin_port ) << "\"";
     logOut << ",\"" << buffer << "\"\n";
@@ -204,15 +211,22 @@ void Socket::logConnectionInfo( sockaddr_in *socket, char *buffer )
 
 //------------------------------------------------------------------------------
 //Meathod:   Socket::logErrorInfo()
-//Purpose:   Logs error information for exceptino thrown 
+//Purpose:   Logs error information for exceptino thrown
 //           message.
 //Variables: date, time, socket->sin_addr, socket->sin_port
 //Returns:   void
 //------------------------------------------------------------------------------
-void Socket::logErrorInfo( char *buffer ) 
+void Socket::logErrorInfo( char *buffer )
 {
-    char date[10], time[10];
-	logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
+    //char date[10], time[10];
+	//logOut << "\"" << _strdate( date ) << "\",\"" << _strtime( time ) << "\"";
+
+	char timebuf [80];
+    struct tm * timeinfo;
+    time_t tod;
+    timeinfo = localtime(&tod);
+    strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
+    logOut << timebuf;
     logOut << ",\"" << buffer << "\"\n";
 }
 
@@ -227,7 +241,7 @@ void ServerSocket::Bind( int port )
     myAddress.sin_family = AF_INET;
     myAddress.sin_addr.s_addr = inet_addr( "127.0.0.1" );
     myAddress.sin_port = htons( port );
-	
+
 	try {
 		if ( bind ( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress) ) == SOCKET_ERROR )
 			throw "ServerSocket: Failed to bind socket\n";
@@ -267,10 +281,10 @@ void ServerSocket::Listen( int connections )
 //Returns:   void
 //------------------------------------------------------------------------------
 void ServerSocket::Accept( )
-{    
+{
     clientSocket.sin_family = AF_INET;
     client_length = sizeof(clientSocket);
-    
+
 	ghMutex = CreateMutex( NULL, FALSE, NULL );
     if ( ghMutex == NULL )
 	{
@@ -283,7 +297,7 @@ void ServerSocket::Accept( )
 	{
 		struct passedInfo acceptedInfo;
 		acceptSocket = accept( myBackup, (SOCKADDR*) &clientSocket, &client_length );
-		
+
 		while ( acceptSocket == SOCKET_ERROR )
 		{
 			acceptSocket = accept( myBackup, (SOCKADDR*) &clientSocket, &client_length );
@@ -297,7 +311,7 @@ void ServerSocket::Accept( )
         {
             //cerr << "CreateThread Error\n";
             break;
-        }			
+        }
     }
 }
 
@@ -316,12 +330,12 @@ void ServerSocket::StartHosting( int port, int connections )
 
 //------------------------------------------------------------------------------
 //Meathod:   SocketServer::loginVerify()
-//Purpose:   Logs connection information for a sockaddr_in and a corresponding 
+//Purpose:   Logs connection information for a sockaddr_in and a corresponding
 //           message. Created for future use, specifically threading.
 //Variables: date, time, socket->sin_addr, socket->sin_port
 //Returns:   void
 //------------------------------------------------------------------------------
-void ServerSocket::loginVerify( ) 
+void ServerSocket::loginVerify( )
 {
      char user[STRLEN] = "username, password\0";
      char login[STRLEN];
@@ -334,39 +348,39 @@ void ServerSocket::loginVerify( )
           send( mySocket, "UNWELCOME\0", sizeof( "UNWELCOME\0" ), 0 );
           WSACleanup( );
           exit( 17 );
-     }             
+     }
 }
 
 //------------------------------------------------------------------------------
 //Meathod:   ServerSocket::commands( )
-//Purpose:   Checks which commands have been sent to the server and executes the 
+//Purpose:   Checks which commands have been sent to the server and executes the
 //           appropriate command
 //Variables: recMessage, input, selection
 //Returns:   void
 //------------------------------------------------------------------------------
-void ServerSocket::commands( const char* recMessage ) 
+void ServerSocket::commands( const char* recMessage )
 {
     std::string input = recMessage, selection = input.substr( 0, 4 );
-     
+
     for( int x = 0; x < 4; x++ )
         selection[x] = toupper( selection[x] );
-         
-    if ( selection == "LIST" ) 
+
+    if ( selection == "LIST" )
     {
         listDir( );
     }
-    else if ( selection == "SEND" ) 
+    else if ( selection == "SEND" )
     {
-        char file[STRLEN]; 
+        char file[STRLEN];
         strncpy( file, recMessage + 5, strlen( recMessage ) );
         sendFile( file );
     }
-    else if ( selection == "QUIT" ) 
+    else if ( selection == "QUIT" )
     {
         send( mySocket, "Server Exiting\0", sizeof( "Server Exiting\0" ), 0 );
         exit( 0 );
     }
-    else 
+    else
     {
         send( mySocket, "ERROR\0", sizeof( "ERROR\0" ), 0 );
     }
@@ -379,7 +393,7 @@ void ServerSocket::commands( const char* recMessage )
 //Returns:   void
 //Reference: https://www.linuxquestions.org/questions/programming-9/c-list-files-in-directory-379323/
 //------------------------------------------------------------------------------
-void ServerSocket::listDir( ) 
+void ServerSocket::listDir( )
 {
     char formated[ STRLEN ];
     char next[ STRLEN ];
@@ -402,38 +416,38 @@ void ServerSocket::listDir( )
 //Variables: recMessage, input, selection
 //Returns:   void
 //------------------------------------------------------------------------------
-void ServerSocket::sendFile( char* fileName ) 
+void ServerSocket::sendFile( char* fileName )
 {
     ifstream fileRead;
     fileRead.open( fileName, ios::in | ios::binary );
-    
+
     char endFile[STRLEN] = "EOFEOFEOFEOFEOFEOF\0";
     char section[STRLEN];
     char next[STRLEN];
     int count = 0;
-    
-    memset( section, '\0', 256 ); 
-    
-    if( fileRead.is_open( ) ) 
+
+    memset( section, '\0', 256 );
+
+    if( fileRead.is_open( ) )
 	{
         send( mySocket, fileName, strlen(fileName), 0);
-        while( fileRead.good( ) ) 
+        while( fileRead.good( ) )
 		{
             while( count < 255 && fileRead.peek( ) != EOF )
             {
-                
+
 				section[ count++ ] = fileRead.get( );
             }
-            
+
             send( mySocket, section, sizeof( section ), 0 );
             recv( mySocket, next, STRLEN, 0 );
             memset( section, '\0', 256 );
             count = 0;
         }
-        
+
         send( mySocket, endFile, sizeof( endFile ), 0 );
         recv( mySocket, section, STRLEN, 0 );
-        
+
         if( strcmp( section, "EOF OK\0" ) == 0 )
         {
             send( mySocket, "OK\0", sizeof( "OK\0" ), 0 );
@@ -442,10 +456,10 @@ void ServerSocket::sendFile( char* fileName )
         {
             send( mySocket, "ERROR\0", sizeof( "ERROR\0" ), 0 );
         }
-            
+
         fileRead.close( );
     }
-    else 
+    else
     {
         send( mySocket, "Unable to Open File\0", strlen( "Unable to Open File\0" ), 0);
     }
@@ -462,7 +476,7 @@ void ClientSocket::ConnectToServer( const char *ipAddress, int port )
     myAddress.sin_family = AF_INET;
     myAddress.sin_addr.s_addr = inet_addr( ipAddress );
     myAddress.sin_port = htons( port );
-    
+
 	try {
 	    if ( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
 			throw "ClientSocket: Failed to connect\n";
