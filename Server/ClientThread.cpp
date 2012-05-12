@@ -28,7 +28,6 @@ void ClientThread::run(LPVOID info)
 	Socks = (comm*) info;
 	dns = new Socket(Socks->dns, DNS_IP);
 	client = new Socket(Socks->client, Socks->clientInfo);
-    printf("%x\n", &Socks);
 
 	//We store the entire message that we build in this
 	stringstream completeMessage;

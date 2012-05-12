@@ -136,12 +136,10 @@ void ForwardThread::run(LPVOID info)
 	                	{
 	                		inData = true;
 	                		relay.RecvData(clientData);
-	                		cout << clientData << endl; cout.flush();
 	                	}
 	                	else if(!inData)
 	                	{
 	                		relay.RecvData(clientData);
-	                		cout << clientData << endl; cout.flush();
 	                	}
 
                 		getline(fileBuffer, clientData);
@@ -149,13 +147,10 @@ void ForwardThread::run(LPVOID info)
                 		if(clientData == ".")
                 			Sleep(250);
                 		relay.SendData(clientData + "\n");
-                    	cout << clientData << endl; cout.flush();
 	                }
 	            }
 	           	getline(fileBuffer, clientData);
-	           	cout << clientData << endl; cout.flush();
 	            relay.RecvData(clientData);
-	            cout << clientData << endl; cout.flush();
 
 	            relay.SendData("QUIT\n");
 			}

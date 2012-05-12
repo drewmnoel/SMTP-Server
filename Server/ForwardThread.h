@@ -4,7 +4,6 @@
 //Purpose: Declaration of the ForwardThread class
 
 #pragma once
-#include <windows.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
