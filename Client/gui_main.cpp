@@ -1,5 +1,6 @@
 #include <windows.h>
-#include "gui_socket.h"
+#include <iostream>
+#include "SMTPClient.h"
 #include <ctime>
 // Define control identifiers
 #define IDC_TO 1001
@@ -195,7 +196,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			strcpy( Label, "To: " );
 			hwndToLabel = CreateStatic( Label, 10, 10, 75, 20, IDC_LABEL_TO, hwnd );
 			SetDefaultFont( IDC_LABEL_TO, hwnd );
-			memset( Label, '\0', 128 ); strcpy( Label, "to@To.com" );
+			memset( Label, '\0', 128 ); strcpy( Label, "to@To.com; to@from.com" );
 			hwndTo = CreateAddress( Label, 85, 10, 200, 20, IDC_TO, hwnd );
 			SetDefaultFont( IDC_TO, hwnd );
 			
@@ -252,7 +253,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						LRESULT checkState;
 						
 						static HWND popup;
-						char IPAddress[20] = "129.21.88.88";
+						char IPAddress[20] = "127.0.0.1";
 						char Message[128]; memset( Message, '\0', 128 );
 						char convert[128]; memset( convert, '\0', 128 );
 						static char endKey[1]; memset( endKey, '\0', sizeof( endKey ) );
@@ -262,267 +263,52 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						//connectDNS.ConnectToServer( IPAddress, 53 );
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
 						
-						ClientSocket connectSMTP;
+						SMTPClient connectSMTP;
 						connectSMTP.ConnectToServer( IPAddress, 25 );
 						
-						if( connectSMTP.RecvData( Message, 128 ) ) { //220 smtp.example.com ESMTP Postfix
-							if( checkError( Message ) )
-								return 1;
-							if( strncmp( Message, "220", 3 ) != 0) {
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							MessageBox( popup, Message, "220", MB_OK );
-						}
-						else {
-							MessageBox( popup, Message, "Error", MB_OK );
+						if( !connectSMTP.recieve220( popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
 						
-						
-						strcpy( Message, "HELO " );
-						hwndToChar( hwndFrom, convert );
-						removeUser( convert );
-						strcat( Message, convert );
-						strcat( Message, "\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "HELO", MB_OK );
-						else {
-							MessageBox( popup, "Error", "HELO", MB_OK );
+						if( !connectSMTP.sendHELO( hwndFrom, popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
 						
-						
-						if( connectSMTP.RecvData( Message, 128 ) ) {
-							if( checkError( Message ) )
-								break;
-							if( strncmp( Message, "250", 3 ) != 0) {
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							MessageBox( popup, Message , "250 Ok", MB_OK );
-							}
-						else {
-							MessageBox( popup, "Error" , "250 Ok", MB_OK );
+						if( !connectSMTP.recieve250( popup ) )
 							return 1;
-						} 
-						memset( Message, '\0', 128 );
 						
-						
-						strcpy( Message, "MAIL FROM:<" );
-						hwndToChar( hwndFrom, convert );
-						strcat( Message, convert );
-						strcat( Message, ">\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "MAIL FROM", MB_OK );
-						else {
-							MessageBox( popup, "Error", "MAIL FROM", MB_OK );
+						if( !connectSMTP.sendMailFrom( hwndFrom, popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
 						
-						
-						if( connectSMTP.RecvData( Message, 128 ) ) {
-							if( checkError( Message ) )
-								break;
-							if( strncmp( Message, "250", 3 ) != 0) {
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							MessageBox( popup, Message , "250 Ok", MB_OK );
-							}
-						else {
-							MessageBox( popup, "Error" , "250 Ok", MB_OK );
+						if( !connectSMTP.recieve250( popup ) )
 							return 1;
-						} 
-						memset( Message, '\0', 128 );
 						
-						
-						strcpy( Message, "RCPT TO:<" );
-						hwndToChar( hwndTo, convert );
-						strcat( Message, convert );
-						strcat( Message, ">\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "RCPT TO", MB_OK );
-						else {
-							MessageBox( popup, "Error", "RCPT TO", MB_OK );
+						if( !connectSMTP.sendRecieptTo( hwndTo, popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
+
+						//no need for recieve250 after this meathod	
 						
-						
-						if( connectSMTP.RecvData( Message, 128 ) ) {
-							if( checkError( Message ) )
-								break;
-							if( strncmp( Message, "250", 3 ) != 0) {
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							MessageBox( popup, Message , "250 Ok", MB_OK );
-							}
-						else {
-							MessageBox( popup, "Error" , "250 Ok", MB_OK );
+						if( !connectSMTP.data( popup ) )
 							return 1;
-						} 
-						memset( Message, '\0', 128 );
 						
-						
-						strcpy( Message, "DATA\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "DATA", MB_OK );
+						if( !connectSMTP.recieve354( popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						
-						
-						if( connectSMTP.RecvData( Message, 128 ) ) {
-							if( checkError( Message ) )
-								break;
-							if( strncmp( Message, "354", 3 ) != 0) 
-							{
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							else
-							{
-								char* findEndKey = strstr( Message, "<CR><LF>" );
-								strncpy( endKey, findEndKey + 8, 1 );
-								strcat( endKey, "\n\0" );
-								MessageBox( popup, endKey, "354 End Data", MB_OK );
-							}
-						}
-						memset( Message, '\0', 128 );
-						
-						/*
-						 *
-						 *
-						 *
-						 */
 						 
-						strcpy( Message, "From: <" );
-						hwndToChar( hwndFrom, convert );
-						strcat( Message, convert );
-						strcat( Message, ">\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "From: <>", MB_OK );
+						if( !connectSMTP.sendMessage( hwndTo, hwndFrom, hwndSubject, hwndEdit, popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
+
+						if( !connectSMTP.return354( popup ) )
+						 	return 1;
+
+						if( !connectSMTP.recieveQueue( popup ) )
+							return 1;
 						
-						strcpy( Message, "To: <" );
-						hwndToChar( hwndTo, convert );
-						strcat( Message, convert );
-						strcat( Message, ">\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "To: <>", MB_OK );
+						if( !connectSMTP.sendQuit( popup ) )
 							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
+
+						if( !connectSMTP.recieveEnd( popup ) )
+							return 1;
 						
-						strcpy( Message, "Date: " );
-						char date[10]; _strdate( date );
-						strcat( Message, date );
-						strcat( Message, " " );
-						char time[10]; _strtime( time );
-						strcat( Message, time );
-						strcat( Message, "\n" );
-						strcat( Message, "\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "Date: ", MB_OK );
-							return 1;
-						}
-						memset( Message, '\0', 128 );
-						
-						strcpy( Message, "Subject: " );
-						hwndToChar( hwndSubject, convert );
-						strcat( Message, convert );
-						strcat( Message, "\n\0" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, Message, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "Subject: ", MB_OK );
-							return 1;
-						}
-						memset( Message, '\0', 128 );
-						memset( convert, '\0', 128 );
-						
-						char* convertBody = (char*)malloc(4096); memset( convertBody, '\0', sizeof( convertBody ) ); 
-						char* messageBody = (char*)malloc(4096); memset( messageBody, '\0', sizeof( messageBody ) );
-						strcpy( messageBody, "\n" );
-						hwndToChar( hwndEdit, convertBody );
-						strcat( messageBody, convertBody );
-						strcat( messageBody, "\n\0" );
-						if( connectSMTP.SendData( messageBody ) )
-							MessageBox( popup, messageBody, "DATA", MB_OK );
-						else {
-							MessageBox( popup, "Error", "Body: ", MB_OK );
-							return 1;
-						}
-						free( convertBody );
-						free( messageBody );
-						
-						/*
-						 *
-						 *
-						 *
-						 */
-						 
-						if( connectSMTP.SendData( endKey ) )
-							MessageBox( popup, endKey, "End Data", MB_OK );
-						else {
-							MessageBox( popup, "Error", "End Data: ", MB_OK );
-							return 1;
-						}
-						memset( Message, '\0', 128 );
-						
-						if( connectSMTP.RecvData( Message ) ) {
-							if( checkError( Message ) )
-								break;
-							if( strncmp( Message, "250", 3 ) != 0) {
-								SetWindowText(hwndFrom, "");
-								return 1;
-							}
-							MessageBox( popup, Message , "queued as", MB_OK );
-						}
-						else {
-							MessageBox( popup, "Error", "Queued: ", MB_OK );
-							return 1;
-						}
-						memset( Message, '\0', 128 );
-						
-						strcpy( Message, "QUIT\n" );
-						if( connectSMTP.SendData( Message ) )
-							MessageBox( popup, "QUIT", "End Data", MB_OK );
-						else {
-							MessageBox( popup, "Error", "Quit: ", MB_OK );
-							return 1;
-						} 
-						memset( Message, '\0', 128 );
-						
-						if( connectSMTP.RecvData( Message, 128 ) ) {
-							if( checkError( Message ) )
-								break;
-							MessageBox( popup, Message , "End", MB_OK );
-						}
-						else {
-							MessageBox( popup, "Error", "End: ", MB_OK );
-							return 1;
-						}
+						strcpy( Message, "Message Sent" );
+						MessageBox( popup, Message, "End", MB_OK );
 						memset( Message, '\0', 128 );
 						
 						// Check the checkbox and clear the fields if checked
@@ -581,77 +367,4 @@ void SendDataToServer( HWND send, char* IPAddress, ClientSocket* connect )
     //connect.ConnectToServer( IPAddress, 53 );
 	//connect.SendData( send );
 	//connect.RecvData( send, length );
-}
-
-//------------------------------------------------------------------------------
-//Function:  hwndToChar( HWND, char* )
-//Purpose:   Converts the text of a window to a char array
-//Variables: convert, temp, length
-//Returns:   void
-//------------------------------------------------------------------------------
-void hwndToChar( HWND convert, char* temp )
-{
-	int length = GetWindowTextLength( convert ) + 1; 
-	GetWindowText( convert, temp, length );
-	temp[length] = '\0';
-}
-
-//------------------------------------------------------------------------------
-//Function:  removeUser( char* )
-//Purpose:   Remove the user id from the email address
-//Variables: temp, send
-//Returns:   void
-//------------------------------------------------------------------------------
-void removeUser( char* temp )
-{
-	for( int x = 0; x < strlen( temp ); x++ )
-	{
-		if( temp[x] == '@' )
-		{
-			char send[strlen( temp ) - x];
-			strncpy( send, temp + x + 1, strlen( temp ) - x );
-			strcpy( temp, send );
-			break;
-		}
-	}
-}
-
-//------------------------------------------------------------------------------
-//Function:  removeUser( char* )
-//Purpose:   Remove the user id from the email address
-//Variables: temp, send
-//Returns:   void
-//------------------------------------------------------------------------------
-bool checkError( char* temp )
-{
-	static HWND error;
-	if( strncmp( temp, "421", 3 ) == 0 )
-	{
-		MessageBox( error, "421: Service Not Available", "Error Code", MB_OK );
-		return true;
-	}
-	else if( strncmp( temp, "447", 3 ) == 0 ) 
-	{
-		MessageBox( error, "447: Outgoing Message Timeout", "Error Code", MB_OK );
-		return true;
-	}
-	else if( strncmp( temp, "500", 3 ) == 0 ) 
-	{
-		MessageBox( error, "500: Command Syntax Error", "Error Code", MB_OK );
-		return true;
-	}
-	else if ( strncmp( temp, "251", 3) == 0 )
-	{
-		MessageBox( error, "251: User Not Local", "Error Code", MB_OK );
-		return true;
-	}
-	else if ( strncmp( temp, "221", 3) == 0 )
-	{
-		MessageBox( error, "221: Server Ending Connection", "Error Code", MB_OK );
-		return true;
-	}
-	else
-	{
-		return false;
-	}
 }
