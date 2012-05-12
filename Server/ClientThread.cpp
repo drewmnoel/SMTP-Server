@@ -81,24 +81,33 @@ void ClientThread::run(LPVOID info)
             return;
         }
     }
+
     //Client will beign sending the message
     client->SendData("354 End data with <CR><LF>.<CR><LF>\n");
     completeMessage << data;
 
     //Keep building up the complete message until the delimiter is reached
-    while (!regex_match(data,(regex)"\\.\n*"))
+    bool done = false;
+    while (!done)
     {
+        if(data.length() >= 3)
+        {
+            if(regex_match(data.substr(data.length()-3), (regex)"\n\\.\n"))
+                done = true;
+        }
         //Possible double log?
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", Socks->clientInfo);
-        if(!client->RecvData(data))
+        if(!done)
         {
-            eventLog("Client disconnected unexpectedly", Socks->clientInfo);
-            return;
+            if(!client->RecvData(data))
+            {
+                eventLog("Client disconnected unexpectedly", Socks->clientInfo);
+                return;
+            }
         }
         //Actual building of complete message
         completeMessage << data;
     }
-
     //Increment the message queue
     Message_Queue += 1;
     sprintf(mBuff,"%d",Message_Queue);
@@ -114,8 +123,9 @@ void ClientThread::run(LPVOID info)
 	ReleaseMutex(fileLock);
 
     //Now look for the quit
-    while(!regex_match(data,(regex)"QUIT\n*"))
+    while(data.find("QUIT\n") != string::npos)
     {
+        cout << data << endl;
         if(!client->RecvData(data))
         {
             eventLog("Client disconnect after message queued",Socks->clientInfo);
@@ -124,7 +134,7 @@ void ClientThread::run(LPVOID info)
     }
     //Close this bad boy down and say goodnye
     client->SendData("221 BYE\n");
-    shutdown(Socks->client, 0);
+    client->CloseSocket();
     return;
 }
 

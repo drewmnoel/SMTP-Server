@@ -79,7 +79,7 @@ void eventLog(string info, string ip)
 
                 time(&hora);
                 timeinfo = localtime(&hora);
-                string date = (string)ctime(timeinfo);
+                string date = (string)asctime(timeinfo);
                 fout << "\"" << date.substr(0,(date.length() - 5)) << "\",\"" << ip << "\",\"" << info << "\"\n";
         }
         //Close the file
