@@ -164,7 +164,7 @@ bool SMTPClient::sendRecieptTo( HWND hwndTo, HWND popup )
 		singleAddress = allAddresses.substr( 0, pos );
 		strcpy( messageOut, "RCPT TO:<");
 		strcat( messageOut, singleAddress.c_str( ) );
-		strcat( messageOut, ">" );
+		strcat( messageOut, ">\n\0" );
 
 		if( SendData( messageOut ) )
 		{
@@ -297,9 +297,10 @@ bool SMTPClient::sendMessage( HWND hwndTo, HWND hwndFrom, HWND hwndSubject, HWND
 	memset( convert, '\0', 128 );
 
 	char timebuf [80];
-    struct tm * timeinfo;
-    time_t tod;
-    timeinfo = localtime(&tod);
+	time_t tod;
+    struct tm* timeinfo;
+    time( &tod );
+    timeinfo = localtime( &tod );
     strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
 	strcpy( messageOut, "Time: " );
 	//char date[10]; _strdate( date );
@@ -438,10 +439,10 @@ bool SMTPClient::recieveQueue( HWND popup )
 //------------------------------------------------------------------------------
 bool SMTPClient::sendQuit( HWND popup )
 {
-		strcpy( messageOut, "QUIT\n" );
+		strcpy( messageOut, "QUIT\n\0" );
 		if( SendData( messageOut ) )
 		{
-			MessageBox( popup, messageOut, "End Data", MB_OK );
+			//MessageBox( popup, messageOut, "End Data", MB_OK );
 		}
 		else
 		{
@@ -466,7 +467,11 @@ bool SMTPClient::recieveEnd( HWND popup )
 	{
 		if( checkError( messageIn ) )
 			return false;
-		MessageBox( popup, messageIn , "End", MB_OK );
+		else if( strncmp( messageIn, "221", 3 ) != 0)
+		{
+			return false;
+		}
+		//MessageBox( popup, messageIn , "End", MB_OK );
 	}
 	else
 	{

@@ -247,7 +247,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						LRESULT checkState;
 						
 						static HWND popup;
-						char IPAddress[20] = "127.0.0.1";
+						char IPAddress[20] = "129.21.112.89";
 						char Message[128]; memset( Message, '\0', 128 );
 						char convert[128]; memset( convert, '\0', 128 );
 						static char endKey[1]; memset( endKey, '\0', sizeof( endKey ) );
@@ -258,7 +258,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
 						
 						SMTPClient connectSMTP;
-						connectSMTP.ConnectToServer( IPAddress, 25 );
+						connectSMTP.ConnectToServer( IPAddress, 8080 );
 						
 						if( !connectSMTP.recieve220( popup ) )
 							return 1;
@@ -290,8 +290,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 							return 1;
 
 						if( !connectSMTP.return354( popup ) ){}
-						 	//return 1;
-						 	
+						 	// 1;
+
 						if( !connectSMTP.recieveQueue( popup ) )
 							return 1;
 						

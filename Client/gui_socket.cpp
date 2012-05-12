@@ -201,6 +201,7 @@ void Socket::logConnectionInfo( sockaddr_in *socket, char *buffer )
     char timebuf [80];
     struct tm * timeinfo;
     time_t tod;
+    time( &tod );
     timeinfo = localtime(&tod);
     strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
     logOut << timebuf;
@@ -224,6 +225,7 @@ void Socket::logErrorInfo( char *buffer )
 	char timebuf [80];
     struct tm * timeinfo;
     time_t tod;
+    time( &tod );
     timeinfo = localtime(&tod);
     strftime (timebuf,80,"\"%a %b %d, %Y\",\"%H:%M:%S\"",timeinfo);
     logOut << timebuf;
