@@ -86,7 +86,7 @@ void ClientThread::run(LPVOID info)
     completeMessage << data;
 
     //Keep building up the complete message until the delimiter is reached
-    while (!regex_match(data,(regex)"\\.\n*"))
+    while (data.substr(data.length()-3) != "\n.\n")
     {
         //Possible double log?
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", Socks->clientInfo);
