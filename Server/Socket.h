@@ -4,8 +4,9 @@
 //Purpose: Declaration of the Socket class
 
 #pragma once
+#include <iostream>
 #include <string>
-#include "WinSock2.h"
+#include <windows.h>
 #include "iniReader.h"
 
 //Logging function

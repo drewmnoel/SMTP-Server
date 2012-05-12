@@ -4,10 +4,12 @@
 //Purpose: Definition of the ClientThread class
 
 #include "ClientThread.h"
-#include <iostream>
-#include <regex>
-using namespace std;
-
+using std::regex;
+using std::endl;
+using std::ios;
+using std::string;
+using std::stringstream;
+using std::ofstream;
 //Name: ClientThread
 //Parameters: none
 //Returns: none
@@ -123,9 +125,8 @@ void ClientThread::run(LPVOID info)
 	ReleaseMutex(fileLock);
 
     //Now look for the quit
-    while(data.find("QUIT\n") != string::npos)
+    while(data != "QUIT\n")
     {
-        cout << data << endl;
         if(!client->RecvData(data))
         {
             eventLog("Client disconnect after message queued",Socks->clientInfo);

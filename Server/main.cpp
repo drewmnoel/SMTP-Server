@@ -3,7 +3,10 @@
 //File: main.cpp
 //Purpose: Main file for the server
 #include "SMTPSocket.h"
-using namespace std;
+using std::string;
+using std::ofstream;
+using std::ios;
+
 //start prototypes
 DWORD WINAPI clientThread(LPVOID lpParam);
 DWORD WINAPI fileThread(LPVOID lpParam);

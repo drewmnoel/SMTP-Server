@@ -5,7 +5,7 @@
 
 #pragma once
 #include "Socket.h"
-#include <windows.h>
+#include <regex>
 #include <string>
 
 struct comm

@@ -6,7 +6,6 @@
 #pragma once
 #include <regex>
 #include "Socket.h"
-#include <iostream>
 
 class SMTPSocket : protected Socket
 {

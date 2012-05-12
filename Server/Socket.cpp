@@ -4,7 +4,6 @@
 //Purpose: Definition of the Socket class
 
 #include "Socket.h"
-#include <iostream>
 
 //Name: Socket
 //Parameters: none
