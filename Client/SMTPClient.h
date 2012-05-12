@@ -1,5 +1,5 @@
 #include "gui_socket.h"
-
+#include <iostream>
 #include "windows.h"
 
 class SMTPClient : public ClientSocket
@@ -14,6 +14,8 @@ class SMTPClient : public ClientSocket
 		bool checkError( char* );
 		void removeUser( char* );
 		void hwndToChar( HWND, char* );
+		void DNSPoll( HWND, char* );
+		void SendDataToServer( HWND, char* );
 	public:
 		SMTPClient( );
         ~SMTPClient( );

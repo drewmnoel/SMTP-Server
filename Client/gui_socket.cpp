@@ -63,14 +63,14 @@ Socket::~Socket( )
 bool Socket::SendData( char *buffer )
 {
 	try {
-		if( send( mySocket, buffer, strlen( buffer ), 0 ) == SOCKET_ERROR )
-			throw "Send Error";
-		std::cout << buffer << std::endl;
-		logConnectionInfo( &myAddress, buffer );
+		send( mySocket, buffer, strlen( buffer ), 0 );
+		std::cout << "sending   " << buffer << std::endl;
+		//logConnectionInfo( &myAddress, buffer );
 		return true;
-	} catch( char* str ) {
+	} catch( exception& e) {
 		char error[128] = "Exception raised: ";
-		strcat( error, str );
+		strcat( error, e.what( ) );
+        std::cout << error << std::endl;
 		logErrorInfo( error );
 		return false;
 	}
@@ -79,15 +79,15 @@ bool Socket::SendData( char *buffer )
 bool Socket::RecvData( char *buffer, int size )
 {
     try {
-		if( recv( mySocket, buffer, size, 0 )  == SOCKET_ERROR )
-			throw "Recieve Error";
-		buffer[sizeof(buffer)] = '\0';
-		std::cout << buffer << std::endl;
-		logConnectionInfo(&clientSocket, buffer);
-    return true;
-	} catch( char* str ) {
+		recv( mySocket, buffer, size, 0 );//  == SOCKET_ERROR )
+		buffer[strlen(buffer)] = '\0';
+		std::cout << "recieving " << buffer << std::endl;
+		//logConnectionInfo(&clientSocket, buffer);
+        return true;
+	} catch( exception& e ) {
 		char error[128] = "Exception raised: ";
-		strcat( error, str );
+		strcat( error, e.what( ) );
+        std::cout << error << std::endl;
 		logErrorInfo( error );
 		return false;
 	}

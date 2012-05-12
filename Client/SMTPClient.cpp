@@ -236,6 +236,7 @@ bool SMTPClient::recieve354( HWND popup )
 			strncpy( endKey, findEndKey + 8, 1 );
 			strcat( endKey, "\n\0" );
 			//MessageBox( popup, endKey, "354 End Data", MB_OK );
+			//std::cout << endKey << std::endl;
 		}
 	}
 	else
@@ -381,7 +382,7 @@ bool SMTPClient::return354( HWND popup )
 	if( SendData( endKey ) ) 
 	{
 		//MessageBox( popup, endKey, "End Data", MB_OK );
-		cout << endKey << endl;
+		//cout << endKey << endl;
 	}
 	else 
 	{
@@ -542,4 +543,36 @@ void SMTPClient::hwndToChar( HWND convert, char* temp )
 	int length = GetWindowTextLength( convert ) + 1; 
 	GetWindowText( convert, temp, length );
 	temp[length] = '\0';
+}
+
+//------------------------------------------------------------------------------
+//Meathod:   Socket::ClientSocket::SMTPClient::DNSPoll( HWND )
+//Purpose:   Extracts the domain name from the input address and sends a DNS 
+//			 query. Will eventually return an ip address to go along with it.
+//Variables: hwndTemp, IPAddress, connect, popup, temp, send
+//Returns:   void
+//------------------------------------------------------------------------------
+void SMTPClient::DNSPoll( HWND hwndTemp, char* IPAddress )
+{
+	static HWND popup;
+	char temp[128]; 
+	hwndToChar( hwndTemp, temp );
+	removeUser( temp );
+}
+
+//------------------------------------------------------------------------------
+//Meathod:   Socket::ClientSocket::SMTPClient::SendDataToServer( HWND )
+//Purpose:   Sends Data to the Server
+//Variables: send, IPAddress, connect, popup, temp, send
+//Returns:   void
+//------------------------------------------------------------------------------
+void SMTPClient::SendDataToServer( HWND send, char* IPAddress )
+{
+	static HWND popup;
+	char temp[128]; memset( temp, '\0', 128 );
+	hwndToChar( send, temp );
+	MessageBox( popup, temp, "The DNS Query is for", MB_OK );
+    //connect.ConnectToServer( IPAddress, 53 );
+	//connect.SendData( send );
+	//connect.RecvData( send, length );
 }

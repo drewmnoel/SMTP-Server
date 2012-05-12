@@ -289,9 +289,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						if( !connectSMTP.sendMessage( hwndTo, hwndFrom, hwndSubject, hwndEdit, popup ) )
 							return 1;
 
-						if( !connectSMTP.return354( popup ) )
-						 	return 1;
-
+						if( !connectSMTP.return354( popup ) ){}
+						 	//return 1;
+						 	
 						if( !connectSMTP.recieveQueue( popup ) )
 							return 1;
 						
