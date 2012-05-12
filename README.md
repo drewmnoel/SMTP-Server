@@ -10,10 +10,18 @@ Authors:
 * Daniel Mercado
 * Drew Noel
 
+Todo:
+----------
+1. Fix file lock on multiple message processing
+2. RCPT TO multiple destinations
+3. Fix line 149's Sleep();
+4. Multiple local destinations
+5. Put bad messages at end of queue
+
 Server Tasks
 ----------
-1. <s>Talk to Scott DNS to register domain</s> -- `Scott`
-2. <s>Create new thread for each connection</s> -- `Scott`
+1. Talk to Scott DNS to register domain</s> -- `Scott`
+2. Create new thread for each connection</s> -- `Scott`
 3. Log all details of transactions -- `Dan`
 4. Create message buffer from client interaction -- `Alex`
 5. Check to see if allowed to relay to destination -- `Rich`
@@ -24,8 +32,8 @@ Server Tasks
 
 Client Tasks
 ----------
-1. <s>Interface (prompt is fine) -- `Alex`</s>
-2. <s>From, To, Server, Message -- `Alex`</s>
+1. Interface (prompt is fine) -- `Alex`
+2. From, To, Server, Message -- `Alex`
 3. Send data to SMTP server -- `Dan`
 4. Check for error codes -- `Rich`
 5. Communicate with simple and extended SMTPs (Used by multiple)
