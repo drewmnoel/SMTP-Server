@@ -20,7 +20,7 @@ struct passedInfo
 };
 HANDLE ghMutex; 
 
-Socket::Socket()
+Socket::Socket( )
 {
 	//WSAStartup
     try { 
@@ -30,7 +30,7 @@ Socket::Socket()
 		char error[128] = "Exception raised: ";
 		strcat( error, str );
 		logErrorInfo( error );
-        WSACleanup();
+        WSACleanup( );
         exit(10);
     }
 
@@ -65,6 +65,7 @@ bool Socket::SendData( char *buffer )
 	try {
 		if( send( mySocket, buffer, strlen( buffer ), 0 ) == SOCKET_ERROR )
 			throw "Send Error";
+		std::cout << buffer << std::endl;
 		logConnectionInfo( &myAddress, buffer );
 		return true;
 	} catch( char* str ) {
@@ -77,20 +78,19 @@ bool Socket::SendData( char *buffer )
 
 bool Socket::RecvData( char *buffer, int size )
 {
-    memset( buffer, '\0', 256); 
-    int i = recv( mySocket, buffer, size, 0 );
-    buffer[i] = '\0';
-    logConnectionInfo(&clientSocket, buffer);
+    try {
+		if( recv( mySocket, buffer, size, 0 )  == SOCKET_ERROR )
+			throw "Recieve Error";
+		buffer[sizeof(buffer)] = '\0';
+		std::cout << buffer << std::endl;
+		logConnectionInfo(&clientSocket, buffer);
     return true;
-}
-
-bool Socket::RecvData( char *buffer )
-{
-    memset( buffer, '\0', 256); 
-    int i = recv( mySocket, buffer, sizeof( buffer ), 0 );
-    buffer[i] = '\0';
-    logConnectionInfo(&clientSocket, buffer);
-    return true;
+	} catch( char* str ) {
+		char error[128] = "Exception raised: ";
+		strcat( error, str );
+		logErrorInfo( error );
+		return false;
+	}
 }
 
 void Socket::CloseConnection()

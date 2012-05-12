@@ -16,14 +16,8 @@
 #define IDC_BUTTON 1008
 #define IDC_CHECK 1009
 
- #define YELLOW  RGB(255,255,0)
+#define YELLOW  RGB(255,255,0)
 
-void DNSPoll( HWND, char*, ClientSocket* );
-void SendDataToServer( HWND, char*, ClientSocket* );
-void hwndToChar( HWND, char* );
-bool checkError( char* );
-void removeUser( char* );
-void sendMessageBody( ClientSocket* );
 
 static HINSTANCE hInstance = NULL;
 char szClassName[] = "ControlClasses";
@@ -334,37 +328,4 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     }
 
     return 0;
-}
-
-
-//------------------------------------------------------------------------------
-//Function:  DNSPoll( HWND )
-//Purpose:   Extracts the domain name from the input address and sends a DNS 
-//			 query. Will eventually return an ip address to go along with it.
-//Variables: hwndTemp, IPAddress, connect, popup, temp, send
-//Returns:   void
-//------------------------------------------------------------------------------
-void DNSPoll( HWND hwndTemp, char* IPAddress, ClientSocket* connect )
-{
-	static HWND popup;
-	char temp[128]; 
-	//hwndToChar( hwndTemp, temp );
-	removeUser( temp );
-}
-
-//------------------------------------------------------------------------------
-//Function:  SendDataToServer( HWND )
-//Purpose:   Sends Data to the Server
-//Variables: send, IPAddress, connect, popup, temp, send
-//Returns:   void
-//------------------------------------------------------------------------------
-void SendDataToServer( HWND send, char* IPAddress, ClientSocket* connect )
-{
-	static HWND popup;
-	char temp[128]; memset( temp, '\0', 128 );
-	//hwndToChar( send, temp );
-	MessageBox( popup, temp, "The DNS Query is for", MB_OK );
-    //connect.ConnectToServer( IPAddress, 53 );
-	//connect.SendData( send );
-	//connect.RecvData( send, length );
 }
