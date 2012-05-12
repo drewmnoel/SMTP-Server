@@ -9,6 +9,7 @@
 #pragma once
 #include <limits>
 #include <fstream>
+#include <iostream>
 #include <ctime>
 #include <dirent.h>
 #include "WinSock2.h"
@@ -39,7 +40,6 @@ class Socket
         Socket( );
         ~Socket( );
         bool SendData( char* );
-		bool RecvData( char* );
         bool RecvData( char*, int );
         void CloseConnection( );
         void GetAndSendMessage( );
