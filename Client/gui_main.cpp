@@ -348,7 +348,7 @@ void DNSPoll( HWND hwndTemp, char* IPAddress, ClientSocket* connect )
 {
 	static HWND popup;
 	char temp[128]; 
-	hwndToChar( hwndTemp, temp );
+	//hwndToChar( hwndTemp, temp );
 	removeUser( temp );
 }
 
@@ -362,7 +362,7 @@ void SendDataToServer( HWND send, char* IPAddress, ClientSocket* connect )
 {
 	static HWND popup;
 	char temp[128]; memset( temp, '\0', 128 );
-	hwndToChar( send, temp );
+	//hwndToChar( send, temp );
 	MessageBox( popup, temp, "The DNS Query is for", MB_OK );
     //connect.ConnectToServer( IPAddress, 53 );
 	//connect.SendData( send );
