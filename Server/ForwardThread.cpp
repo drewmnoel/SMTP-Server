@@ -44,7 +44,7 @@ void ForwardThread::run(LPVOID info)
 		toNumber = 0;
 		Sleep(1000);
 		// Get the file mutex
-		
+
 		if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 		{
 			fin.open("master_baffer.woopsy", ios::in);
@@ -133,7 +133,28 @@ void ForwardThread::run(LPVOID info)
                         	{
                             	//Open the correct user file and append the string stream into it
                             	fin.open((userName [x] + ".txt").c_str(), ios::out | ios::app);
-                            	fin << fileBuffer.str();
+                            	temp.str("");
+                            	string linebyline;
+                            	while(!fileBuffer.eof())
+                            	{
+                            	    getline(fileBuffer,linebyline);
+                            	    if(linebyline.substr(0,4) == "RCPT")
+                            	    {
+                            	        if(linebyline.substr(linebyline.length() - 1) == "x")
+                            	        {
+                            	            temp << linebyline.substr(0,linebyline.length() - 1) << "\n";
+                            	        }
+                            	        else
+                            	        {
+                                            temp << linebyline << "\n";
+                            	        }
+                            	    }
+                            	    else
+                            	    {
+                            	        temp << linebyline << "\n";
+                            	    }
+                            	}
+                            	fin << temp.str();
                             	eventLog("Stored entire message in " + userName [x] + ".txt", "0.0.0.0");
                             	fin.close();
                             	mark[x] = "x";
@@ -168,6 +189,31 @@ void ForwardThread::run(LPVOID info)
                     {
                         relay.RecvData(clientData);
                         relay.SendData("HELO " + registeredName + "\n");
+
+                        temp.str("");
+                        string linebyline;
+                        while(!fileBuffer.eof())
+                        {
+                            getline(fileBuffer,linebyline);
+                            if(linebyline.substr(0,4) == "RCPT")
+                            {
+                                if(linebyline.substr(linebyline.length() - 1) == "x")
+                                {
+                                    temp << linebyline.substr(0,linebyline.length() - 1) << "\n";
+                                }
+                                else
+                                {
+                                    temp << linebyline << "\n";
+                                }
+                            }
+                            else
+                            {
+                                temp << linebyline << "\n";
+                            }
+                        }
+                        fileBuffer.str("");
+                        fileBuffer << temp.str();
+
                         while (clientData != "." && !fileBuffer.eof())
                         {
                             if(clientData == "DATA")
@@ -183,7 +229,7 @@ void ForwardThread::run(LPVOID info)
                             getline(fileBuffer, clientData);
 
                             relay.SendData(clientData + "\n");
-                            
+
                         }
                         getline(fileBuffer, clientData);
 
