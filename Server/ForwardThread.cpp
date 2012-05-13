@@ -19,7 +19,9 @@ void ForwardThread::run(LPVOID info)
 	fstream fin;
 	bool finalDestination;
 	stringstream fileBuffer, restOfFile;
-	string clientData, userName, destServer;
+	string clientData, destServer;
+	string userName [10];
+	int toNumber = 0;
 
 	while(1)
 	{
@@ -80,7 +82,8 @@ void ForwardThread::run(LPVOID info)
 					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
 					int start = clientData.find("<");
                     int length = clientData.find("@") - start;
-                    userName = clientData.substr(++start, --length);
+                    userName [toNumber] = clientData.substr(++start, --length);
+                    toNumber++;
 				}
 			}
 
@@ -92,7 +95,7 @@ void ForwardThread::run(LPVOID info)
 			}
 
 			// Get the rest of the file
-			restOfFile << fin.rdbuf(); 
+			restOfFile << fin.rdbuf();
 
 			fin.close();
 
@@ -110,20 +113,18 @@ void ForwardThread::run(LPVOID info)
 	        //The user is local
 			if (finalDestination || destServer == registeredName)
 			{
-				if (userName == "alex" || userName == "dan" || userName == "drew"
-						|| userName == "scott" || userName == "rich")
+				for (int i = 0 ; i < toNumber ; i++)
 				{
-	                //Open the correct user file and append the string stream into it
-					fin.open((userName + ".txt").c_str(), ios::out | ios::app);
-					fin << fileBuffer.str();
-	                eventLog("Stored entire message in " + userName + ".txt", "0.0.0.0");
-					fin.close();
-				}
-				else
-				{
-					cerr << "No user " << userName << " exists on this server."
-							<< endl;
-				}
+                    if (userName [i] == "alex" || userName [i] == "dan" || userName [i] == "drew"
+                            || userName [i] == "scott" || userName [i] == "rich")
+                    {
+                        //Open the correct user file and append the string stream into it
+                        fin.open((userName [i] + ".txt").c_str(), ios::out | ios::app);
+                        fin << fileBuffer.str();
+                        eventLog("Stored entire message in " + userName [i] + ".txt", "0.0.0.0");
+                        fin.close();
+                    }
+                }
 			}
 
 			//We are finalDestinationing the message
@@ -139,7 +140,7 @@ void ForwardThread::run(LPVOID info)
 					relay = Socket();
 					relay.setUpSocket();
 
-					if (validRelay && !relay.Connect(destIP,PORT)) 
+					if (validRelay && !relay.Connect(destIP,PORT))
 					{
 						validRelay = false;
 					}
