@@ -8,8 +8,12 @@
 #include <sstream>
 #include <iostream>
 #include "ClientThread.h"
-using namespace std;
-
+using std::string;
+using std::fstream;
+using std::ios;
+using std::cerr;
+using std::endl;
+using std::stringstream;
 class ForwardThread
 {
 public:
@@ -20,7 +24,7 @@ public:
 	void run(LPVOID);
 
 	//Method to perform a DNS lookup on an IP
-	void dnsLookup(string);
+	string dnsLookup(string);
 
 private:
     //Struct containing client/IP socket and DNS sokcet

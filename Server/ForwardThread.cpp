@@ -23,10 +23,12 @@ void ForwardThread::run(LPVOID info)
 
 	while(1)
 	{
+		validRelay = true;
 		fileBuffer.str("");
 		restOfFile.str("");
 		Sleep(1000);
 		// Get the file mutex
+		std::cout << "Waiting for file lock...\n";
 		if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 		{
 			fin.open("master_baffer.woopsy", ios::in);
@@ -121,8 +123,22 @@ void ForwardThread::run(LPVOID info)
 			//We are finalDestinationing the message
 			else
 			{
-				dnsLookup(destServer);
+				string destIP = dnsLookup(destServer);
+				if (destIP == "")
+				{
+					validRelay = false;
+				}
 
+				relay = Socket();
+				relay.setUpSocket();
+
+				if (validRelay && !relay.Connect(destIP,PORT)) 
+				{
+					validRelay = false;
+					
+				}
+				else
+					validRelay = true;
 				relay.RecvData(clientData);
 				relay.SendData("HELO " + registeredName + "\n");
 
@@ -148,13 +164,19 @@ void ForwardThread::run(LPVOID info)
                 			Sleep(250);
                 		relay.SendData(clientData + "\n");
 	                }
-	            }
-	           	getline(fileBuffer, clientData);
-	            relay.RecvData(clientData);
+	           		getline(fileBuffer, clientData);
+	            	relay.RecvData(clientData);
 
-	            relay.SendData("QUIT\n");
+		            relay.SendData("QUIT\n");
+		            relay.RecvData(clientData);
+		            relay.CloseSocket();
+		        }
+		        else
+		        {
+					fin.open("master_baffer.woopsy", ios::out | ios::app);
+					fin << fileBuffer.str();
+		        }
 			}
-			relay.CloseSocket();
 			ReleaseMutex(fileLock);
 		
 		}
@@ -166,9 +188,9 @@ void ForwardThread::run(LPVOID info)
 //    toLookup - The IP to perform the lookup for
 //Returns: none
 //Purpose: Determine the name associated with an IP address
-void ForwardThread::dnsLookup(string toLookup)
+string ForwardThread::dnsLookup(string toLookup)
 {
-	
+	string retval;
 	DWORD dwWaitResult = WaitForSingleObject(dnsLock, INFINITE);
 	if (dwWaitResult == WAIT_OBJECT_0)
 	{
@@ -182,29 +204,23 @@ void ForwardThread::dnsLookup(string toLookup)
 			eventLog("Domain not registered", "0.0.0.0");
 			//*Put it at the end of the file
 			validRelay = false;
-			return;
+			retval = "";
 		}
 		else if (response == "4")
 		{
 			eventLog("DNS Bad Command", "0.0.0.0");
 			validRelay = false;
-			return;
+			retval = "";
 		}
 		else
 		{
-			relay = Socket();
-			relay.setUpSocket();
-			if (!relay.Connect(response,PORT)) 
-			{
-				validRelay = false;
-				return;
-			}
-			else
-				validRelay = true;
+			retval = response;
 		}
+
 		//check if its an ip or an invalid address and cannot sent it
 		ReleaseMutex(dnsLock);
 	}
+	return retval;
 }
 
 DWORD WINAPI runFile(LPVOID lpParam)
