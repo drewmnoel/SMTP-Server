@@ -7,6 +7,7 @@
 #include "Socket.h"
 #include <regex>
 #include <string>
+using std::regex;
 
 struct comm
 {

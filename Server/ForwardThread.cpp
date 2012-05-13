@@ -24,7 +24,7 @@ void ForwardThread::run(LPVOID info)
 	while(1)
 	{
 		validRelay = true;
-		
+
 		fileBuffer.clear();
 		fileBuffer.str("");
 
@@ -108,7 +108,7 @@ void ForwardThread::run(LPVOID info)
 
 
 	        //The user is local
-			if (finalDestination)
+			if (finalDestination || destServer == registeredName)
 			{
 				if (userName == "alex" || userName == "dan" || userName == "drew"
 						|| userName == "scott" || userName == "rich")

@@ -39,3 +39,6 @@ private:
 
 //Function to perform the file handling thread
 DWORD WINAPI runFile(LPVOID);
+
+//The name that we successfully registered with the DNS server or a failure default
+extern std::string registeredName;
