@@ -24,8 +24,14 @@ void ForwardThread::run(LPVOID info)
 	while(1)
 	{
 		validRelay = true;
+		
+		fileBuffer.clear();
 		fileBuffer.str("");
+
 		restOfFile.str("");
+		restOfFile.clear();
+
+		clientData = "";
 		Sleep(1000);
 		// Get the file mutex
 		std::cout << "Waiting for file lock...\n";
@@ -128,25 +134,26 @@ void ForwardThread::run(LPVOID info)
 				{
 					validRelay = false;
 				}
-
-				relay = Socket();
-				relay.setUpSocket();
-
-				if (validRelay && !relay.Connect(destIP,PORT)) 
-				{
-					validRelay = false;
-					
-				}
 				else
-					validRelay = true;
-				relay.RecvData(clientData);
-				relay.SendData("HELO " + registeredName + "\n");
+				{
+					relay = Socket();
+					relay.setUpSocket();
+
+					if (validRelay && !relay.Connect(destIP,PORT)) 
+					{
+						validRelay = false;
+					}
+					else
+						validRelay = true;
+				}
 
 	            //now that we have an ip we can continue or we can end it here if invalid or whatever
 	            bool inData = false;
 	            if (validRelay)
 	            {
-	                while (clientData != ".")
+	            	relay.RecvData(clientData);
+					relay.SendData("HELO " + registeredName + "\n");
+	                while (clientData != "." && !fileBuffer.eof())
 	                {
 	                	if(clientData == "DATA")
 	                	{
@@ -163,8 +170,10 @@ void ForwardThread::run(LPVOID info)
                 		if(clientData == ".")
                 			Sleep(250);
                 		relay.SendData(clientData + "\n");
+                		std::cout << "Loop: " << clientData << "\n";
 	                }
 	           		getline(fileBuffer, clientData);
+
 	            	relay.RecvData(clientData);
 
 		            relay.SendData("QUIT\n");
@@ -173,13 +182,16 @@ void ForwardThread::run(LPVOID info)
 		        }
 		        else
 		        {
-					fin.open("master_baffer.woopsy", ios::out | ios::app);
-					fin << fileBuffer.str();
+		        	std::cout << "Something went wrong, not forwarding!\n";
+					fin.open("master_baffer.woopsy", ios::out);
+					fin << restOfFile.str();
+					fin << "false\n";
+					fin << fileBuffer.str() << std::endl;
+					fin.close();
 		        }
 			}
-			ReleaseMutex(fileLock);
-		
 		}
+		ReleaseMutex(fileLock);
 	}
 }
 
