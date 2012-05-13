@@ -21,7 +21,7 @@ void ForwardThread::run(LPVOID info)
 	stringstream fileBuffer, restOfFile;
 	string clientData, destServer;
 	string userName [10];
-	int toNumber = 0;
+	int toNumber = -1;
 
 	while(1)
 	{
@@ -79,11 +79,11 @@ void ForwardThread::run(LPVOID info)
 				// See if we got a RCPT TO
 				if(clientData[0] == 'R')
 				{
+				    toNumber++;
 					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
 					int start = clientData.find("<");
                     int length = clientData.find("@") - start;
                     userName [toNumber] = clientData.substr(++start, --length);
-                    toNumber++;
 				}
 			}
 
