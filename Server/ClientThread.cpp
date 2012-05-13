@@ -96,6 +96,11 @@ void ClientThread::run(LPVOID info)
             if(regex_match(data.substr(data.length()-3), (regex)"\n\\.\n"))
                 break;
         }
+        else if(data == ".\n")
+        {
+            break;
+        }
+
         //Possible double log?
         eventLog("Received data \"" + (regex_match(data,(regex)"*\n") ? data : data.substr(0,(data.length() -1))) + "\"", Socks->clientInfo);
         if(!client->RecvData(data))
