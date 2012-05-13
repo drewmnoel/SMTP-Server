@@ -25,9 +25,13 @@ void ForwardThread::run(LPVOID info)
 	string mark[10];
 	int toNumber = 0;
     stringstream temp;
+    vector<string> sentTo;
 
 	while(1)
 	{
+		while(sentTo.size() != 0)
+			sentTo.pop_back();
+
 		validRelay = true;
 		bool notFowarded = false;
 
@@ -123,6 +127,13 @@ void ForwardThread::run(LPVOID info)
 
             for(int x = 0;x < toNumber;x++)
             {
+            	// Check to see if we have sent to this server already
+            	vector<string>::iterator it;
+            	it = find(sentTo.begin(), sentTo.end(), destServer[x]);
+            	if(it != sentTo.end() && destServer[x] != registeredName)
+            		continue;
+
+            	sentTo.push_back(destServer[x]);
                 //The user is local
                 if (destServer[x] == registeredName)
                 {
@@ -217,6 +228,7 @@ void ForwardThread::run(LPVOID info)
                             }
                         }
                         fileBuffer.str("");
+                        fileBuffer.clear();
                         fileBuffer << temp.str();
 
                         while (clientData != "." && !fileBuffer.eof())

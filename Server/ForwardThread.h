@@ -7,12 +7,15 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 #include "ClientThread.h"
 using std::string;
 using std::fstream;
 using std::ios;
 using std::cerr;
 using std::endl;
+using std::vector;
 using std::stringstream;
 class ForwardThread
 {
