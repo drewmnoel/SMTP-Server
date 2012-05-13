@@ -168,8 +168,6 @@ void ForwardThread::run(LPVOID info)
 
                 		getline(fileBuffer, clientData);
 
-                		if(clientData == ".")
-                			Sleep(250);
                 		relay.SendData(clientData + "\n");
                 		std::cout << "Loop: " << clientData << "\n";
 	                }

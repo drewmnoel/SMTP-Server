@@ -12,11 +12,11 @@ Authors:
 
 Todo:
 ----------
-1. Fix file lock on multiple message processing
-2. RCPT TO multiple destinations
-3. Fix line 149's Sleep();
-4. Multiple local destinations
-5. Put bad messages at end of queue
+1. Fix file lock on multiple message processing -- `DONE`
+2. RCPT TO multiple remote destinations
+4. Fix line 149's Sleep(); -- `DONE`
+5. Multiple local destinations -- `DONE`
+6. Put bad messages at end of queue -- `DONE`
 
 Server Tasks
 ----------
