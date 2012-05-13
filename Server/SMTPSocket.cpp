@@ -7,6 +7,8 @@
 #include "ClientThread.h"
 #include "ForwardThread.h"
 
+using std::regex;
+
 extern int PORT;
 
 //Name: setUp

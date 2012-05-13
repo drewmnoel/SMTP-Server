@@ -19,21 +19,29 @@ void ForwardThread::run(LPVOID info)
 	fstream fin;
 	bool finalDestination;
 	stringstream fileBuffer, restOfFile;
-	string clientData, destServer;
+	string clientData;
+	string destServer[10];
 	string userName [10];
+	string mark[10];
 	int toNumber = -1;
+    stringstream temp;
 
 	while(1)
 	{
 		validRelay = true;
+		bool notFowarded = false;
 
 		fileBuffer.clear();
 		fileBuffer.str("");
+
+		temp.clear();
+		temp.str("");
 
 		restOfFile.str("");
 		restOfFile.clear();
 
 		clientData = "";
+
 		Sleep(1000);
 		// Get the file mutex
 		std::cout << "Waiting for file lock...\n";
@@ -76,14 +84,17 @@ void ForwardThread::run(LPVOID info)
 				getline(fin, clientData);
 				fileBuffer << clientData << endl;
 
-				// See if we got a RCPT TO
-				if(clientData[0] == 'R')
-				{
-				    toNumber++;
-					destServer = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
-					int start = clientData.find("<");
-                    int length = clientData.find("@") - start;
-                    userName [toNumber] = clientData.substr(++start, --length);
+                // See if we got a RCPT TO
+                if(clientData[0] == 'R')
+                {
+                    if(clientData.substr(clientData.length() - 1) != "x")
+                    {
+                        toNumber++;
+                        destServer[toNumber] = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
+                        int start = clientData.find("<");
+                        int length = clientData.find("@") - start;
+                        userName [toNumber] = clientData.substr(++start, --length);
+                    }
 				}
 			}
 
@@ -109,86 +120,104 @@ void ForwardThread::run(LPVOID info)
 			/* We have read the entire message into memory */
 			/* Read the username */
 
+            for(int x = 0;x < toNumber;x++)
+            {
+                //The user is local
+                if (finalDestination && destServer[x] == registeredName)
+                {
+                        if (userName [x] == "alex" || userName [x] == "dan" || userName [x] == "drew"
+                                || userName [x] == "scott" || userName [x] == "rich")
+                        {
+                            //Open the correct user file and append the string stream into it
+                            fin.open((userName [x] + ".txt").c_str(), ios::out | ios::app);
+                            fin << fileBuffer.str();
+                            eventLog("Stored entire message in " + userName [x] + ".txt", "0.0.0.0");
+                            fin.close();
+                            mark[x] = "x";
+                        }
+                }
 
-	        //The user is local
-			if (finalDestination || destServer == registeredName)
-			{
-				for (int i = 0 ; i < toNumber ; i++)
-				{
-                    if (userName [i] == "alex" || userName [i] == "dan" || userName [i] == "drew"
-                            || userName [i] == "scott" || userName [i] == "rich")
+                //We are finalDestinationing the message
+                else if(!finalDestination)
+                {
+                    string destIP = dnsLookup(destServer[x]);
+                    if (destIP == "")
                     {
-                        //Open the correct user file and append the string stream into it
-                        fin.open((userName [i] + ".txt").c_str(), ios::out | ios::app);
-                        fin << fileBuffer.str();
-                        eventLog("Stored entire message in " + userName [i] + ".txt", "0.0.0.0");
-                        fin.close();
+                        validRelay = false;
+                    }
+                    else
+                    {
+                        relay = Socket();
+                        relay.setUpSocket();
+
+                        if (validRelay && !relay.Connect(destIP,PORT))
+                        {
+                            validRelay = false;
+                        }
+                        else
+                            validRelay = true;
+                    }
+
+                    //now that we have an ip we can continue or we can end it here if invalid or whatever
+                    bool inData = false;
+                    if (validRelay)
+                    {
+                        relay.RecvData(clientData);
+                        relay.SendData("HELO " + registeredName + "\n");
+                        while (clientData != "." && !fileBuffer.eof())
+                        {
+                            if(clientData == "DATA")
+                            {
+                                inData = true;
+                                relay.RecvData(clientData);
+                            }
+                            else if(!inData)
+                            {
+                                relay.RecvData(clientData);
+                            }
+
+                            getline(fileBuffer, clientData);
+
+                            relay.SendData(clientData + "\n");
+                            std::cout << "Loop: " << clientData << "\n";
+                        }
+                        getline(fileBuffer, clientData);
+
+                        relay.RecvData(clientData);
+
+                        relay.SendData("QUIT\n");
+                        relay.RecvData(clientData);
+                        relay.CloseSocket();
+                        mark[x] = "x";
+                    }
+                    else
+                    {
+                        notFowarded = true;
                     }
                 }
-			}
+            }
 
-			//We are finalDestinationing the message
-			else
-			{
-				string destIP = dnsLookup(destServer);
-				if (destIP == "")
-				{
-					validRelay = false;
-				}
-				else
-				{
-					relay = Socket();
-					relay.setUpSocket();
+            if(notFowarded)
+            {
+                std::cout << "Something went wrong, not forwarding!\n";
+                fin.open("master_baffer.woopsy", ios::out);
+                fin << restOfFile.str();
+                fin << "false\n";
 
-					if (validRelay && !relay.Connect(destIP,PORT))
-					{
-						validRelay = false;
-					}
-					else
-						validRelay = true;
-				}
+                //mark things then write
+                for(int i = 0;i < toNumber;i++)
+                {
+                    if(mark[i] == "x")
+                    {
+                        temp << fileBuffer.str();
+                        fileBuffer.str("");
+                        fileBuffer << temp.str().replace(temp.str().find("RCPT TO:<" + userName[i] + "@" + destServer[i] + ">"),(11 + userName[i].length() + destServer[i].length()),"RCPT TO:<" + userName[i] + "@" + destServer[i] + ">x");
+                    }
+                }
 
-	            //now that we have an ip we can continue or we can end it here if invalid or whatever
-	            bool inData = false;
-	            if (validRelay)
-	            {
-	            	relay.RecvData(clientData);
-					relay.SendData("HELO " + registeredName + "\n");
-	                while (clientData != "." && !fileBuffer.eof())
-	                {
-	                	if(clientData == "DATA")
-	                	{
-	                		inData = true;
-	                		relay.RecvData(clientData);
-	                	}
-	                	else if(!inData)
-	                	{
-	                		relay.RecvData(clientData);
-	                	}
-
-                		getline(fileBuffer, clientData);
-
-                		relay.SendData(clientData + "\n");
-                		std::cout << "Loop: " << clientData << "\n";
-	                }
-	           		getline(fileBuffer, clientData);
-
-	            	relay.RecvData(clientData);
-
-		            relay.SendData("QUIT\n");
-		            relay.RecvData(clientData);
-		            relay.CloseSocket();
-		        }
-		        else
-		        {
-		        	std::cout << "Something went wrong, not forwarding!\n";
-					fin.open("master_baffer.woopsy", ios::out);
-					fin << restOfFile.str();
-					fin << "false\n";
-					fin << fileBuffer.str() << std::endl;
-					fin.close();
-		        }
-			}
+                fin << fileBuffer.str() << std::endl;
+                fin.close();
+            }
 		}
 		ReleaseMutex(fileLock);
 	}
