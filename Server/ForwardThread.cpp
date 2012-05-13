@@ -41,10 +41,10 @@ void ForwardThread::run(LPVOID info)
 		restOfFile.clear();
 
 		clientData = "";
-
+		toNumber = 0;
 		Sleep(1000);
 		// Get the file mutex
-		std::cout << "Waiting for file lock...\n";
+		
 		if (WaitForSingleObject(fileLock, INFINITE) == WAIT_OBJECT_0)
 		{
 			fin.open("master_baffer.woopsy", ios::in);
@@ -93,6 +93,7 @@ void ForwardThread::run(LPVOID info)
                         int start = clientData.find("<");
                         int length = clientData.find("@") - start;
                         userName [toNumber] = clientData.substr(++start, --length);
+                        mark[toNumber] = "";
                         toNumber++;
                     }
 				}
@@ -128,12 +129,15 @@ void ForwardThread::run(LPVOID info)
                         if (userName [x] == "alex" || userName [x] == "dan" || userName [x] == "drew"
                                 || userName [x] == "scott" || userName [x] == "rich")
                         {
-                            //Open the correct user file and append the string stream into it
-                            fin.open((userName [x] + ".txt").c_str(), ios::out | ios::app);
-                            fin << fileBuffer.str();
-                            eventLog("Stored entire message in " + userName [x] + ".txt", "0.0.0.0");
-                            fin.close();
-                            mark[x] = "x";
+                        	if(mark[x] != "x")
+                        	{
+                            	//Open the correct user file and append the string stream into it
+                            	fin.open((userName [x] + ".txt").c_str(), ios::out | ios::app);
+                            	fin << fileBuffer.str();
+                            	eventLog("Stored entire message in " + userName [x] + ".txt", "0.0.0.0");
+                            	fin.close();
+                            	mark[x] = "x";
+                            }
                         }
                 }
 
@@ -179,7 +183,7 @@ void ForwardThread::run(LPVOID info)
                             getline(fileBuffer, clientData);
 
                             relay.SendData(clientData + "\n");
-                            std::cout << "Loop: " << clientData << "\n";
+                            
                         }
                         getline(fileBuffer, clientData);
 
@@ -199,7 +203,6 @@ void ForwardThread::run(LPVOID info)
 
             if(notFowarded)
             {
-                std::cout << "Something went wrong, not forwarding!\n";
                 fin.open("master_baffer.woopsy", ios::out);
                 fin << restOfFile.str();
                 fin << "false\n";
@@ -207,13 +210,23 @@ void ForwardThread::run(LPVOID info)
                 //mark things then write
                 for(int i = 0;i < toNumber;i++)
                 {
+                	string tempToStr;
                     if(mark[i] == "x")
                     {
                     	temp.clear();
                     	temp.str("");
                     	temp << fileBuffer.str();
+                    	tempToStr = temp.str();
                     	fileBuffer.str("");
-                        fileBuffer << temp.str().replace(temp.str().find("RCPT TO:<" + userName[i] + "@" + destServer[i] + ">"),(11 + userName[i].length() + destServer[i].length()),"RCPT TO:<" + userName[i] + "@" + destServer[i] + ">x");
+
+                    	if(tempToStr.find("RCPT TO:<" + userName[i] + "@" + destServer[i] + ">\n") != string::npos)
+                    	{
+                        	fileBuffer << tempToStr.replace(tempToStr.find("RCPT TO:<" + userName[i] + "@" + destServer[i] + ">\n"),(11 + userName[i].length() + destServer[i].length()),"RCPT TO:<" + userName[i] + "@" + destServer[i] + ">x");
+                    	}
+                		else
+                		{
+                			fileBuffer << tempToStr;
+                		}
                     }
                 }
 
