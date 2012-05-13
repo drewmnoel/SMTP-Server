@@ -11,7 +11,7 @@ SMTPClient::SMTPClient( )
 	memset( messageOut, '\0', 128 );
 	memset( messageIn, '\0', 128 );
 	memset( convert, '\0', 128 );
-	memset( endKey, '\0', 1 );
+	memset( endKey, '\0', 3 );
 }
 
 //------------------------------------------------------------------------------

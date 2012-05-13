@@ -8,7 +8,7 @@ class SMTPClient : public ClientSocket
 		char messageOut[128];
 		char messageIn[128];
 		char convert[128];
-		char endKey[1];
+		char endKey[3];
 		//static HWND popup;
 	protected:
 		bool checkError( char* );
