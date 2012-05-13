@@ -135,6 +135,7 @@ void ForwardThread::run(LPVOID info)
                             	fin.open((userName [x] + ".txt").c_str(), ios::out | ios::app);
                             	temp.str("");
                             	string linebyline;
+                            	fileBuffer.clear();
                             	while(!fileBuffer.eof())
                             	{
                             	    getline(fileBuffer,linebyline);
@@ -154,7 +155,11 @@ void ForwardThread::run(LPVOID info)
                             	        temp << linebyline << "\n";
                             	    }
                             	}
-                            	fin << temp.str();
+                            	fileBuffer.str("");
+                            	fileBuffer.clear();
+                            	fileBuffer << temp.str();
+
+                            	fin << fileBuffer.str();
                             	eventLog("Stored entire message in " + userName [x] + ".txt", "0.0.0.0");
                             	fin.close();
                             	mark[x] = "x";
