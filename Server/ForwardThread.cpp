@@ -23,7 +23,7 @@ void ForwardThread::run(LPVOID info)
 	string destServer[10];
 	string userName [10];
 	string mark[10];
-	int toNumber = -1;
+	int toNumber = 0;
     stringstream temp;
 
 	while(1)
@@ -89,11 +89,11 @@ void ForwardThread::run(LPVOID info)
                 {
                     if(clientData.substr(clientData.length() - 1) != "x")
                     {
-                        toNumber++;
                         destServer[toNumber] = clientData.substr(clientData.find('@')+1, clientData.length()-clientData.find('@')-2);
                         int start = clientData.find("<");
                         int length = clientData.find("@") - start;
                         userName [toNumber] = clientData.substr(++start, --length);
+                        toNumber++;
                     }
 				}
 			}
@@ -123,7 +123,7 @@ void ForwardThread::run(LPVOID info)
             for(int x = 0;x < toNumber;x++)
             {
                 //The user is local
-                if (finalDestination && destServer[x] == registeredName)
+                if (destServer[x] == registeredName)
                 {
                         if (userName [x] == "alex" || userName [x] == "dan" || userName [x] == "drew"
                                 || userName [x] == "scott" || userName [x] == "rich")
@@ -209,8 +209,10 @@ void ForwardThread::run(LPVOID info)
                 {
                     if(mark[i] == "x")
                     {
-                        temp << fileBuffer.str();
-                        fileBuffer.str("");
+                    	temp.clear();
+                    	temp.str("");
+                    	temp << fileBuffer.str();
+                    	fileBuffer.str("");
                         fileBuffer << temp.str().replace(temp.str().find("RCPT TO:<" + userName[i] + "@" + destServer[i] + ">"),(11 + userName[i].length() + destServer[i].length()),"RCPT TO:<" + userName[i] + "@" + destServer[i] + ">x");
                     }
                 }
