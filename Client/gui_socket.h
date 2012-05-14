@@ -63,6 +63,6 @@ class ServerSocket : public Socket
 
 class ClientSocket : public Socket
 {
-	public:
-		void ConnectToServer( const char*, int );
+    public:
+	bool ConnectToServer( const char*, int );
 };

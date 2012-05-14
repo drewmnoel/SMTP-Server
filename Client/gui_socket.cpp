@@ -24,11 +24,10 @@ Socket::Socket( )
 {
 	//WSAStartup
     try {
-		if( WSAStartup( MAKEWORD(2, 2), &wsaData ) != NO_ERROR )
-			throw "Socket Initialization: Error with WSAStartup\n";
-    } catch( char* str ) {
+		WSAStartup( MAKEWORD(2, 2), &wsaData );
+    } catch( exception& e ) {
 		char error[128] = "Exception raised: ";
-		strcat( error, str );
+		strcat( error, e.what( ) );
 		logErrorInfo( error );
         WSACleanup( );
         exit(10);
@@ -39,10 +38,10 @@ Socket::Socket( )
 		mySocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		if ( mySocket == INVALID_SOCKET )
 			throw "Socket Initialization: Error creating socket";
-	} catch( char* str ) {
+	} catch( exception& e ) {
         char error[128] = "Exception raised: ";
-		strcat( error, str );
-		logErrorInfo( error );
+		strcat( error, e.what( ) );
+		logErrorInfo( error ); 
         WSACleanup( );
         exit(11);
     }
@@ -65,7 +64,7 @@ bool Socket::SendData( char *buffer )
 	try {
 		send( mySocket, buffer, strlen( buffer ), 0 );
 		std::cout << "sending   " << buffer << std::endl;
-		//logConnectionInfo( &myAddress, buffer );
+		logConnectionInfo( &myAddress, buffer );
 		return true;
 	} catch( exception& e) {
 		char error[128] = "Exception raised: ";
@@ -82,7 +81,7 @@ bool Socket::RecvData( char *buffer, int size )
 		recv( mySocket, buffer, size, 0 );//  == SOCKET_ERROR )
 		buffer[strlen(buffer)] = '\0';
 		std::cout << "recieving " << buffer << std::endl;
-		//logConnectionInfo(&clientSocket, buffer);
+		logConnectionInfo(&clientSocket, buffer);
         return true;
 	} catch( exception& e ) {
 		char error[128] = "Exception raised: ";
@@ -93,9 +92,8 @@ bool Socket::RecvData( char *buffer, int size )
 	}
 }
 
-void Socket::CloseConnection()
+void Socket::CloseConnection( )
 {
-    //cout<<"CLOSE CONNECTION"<<endl;
     closesocket( mySocket );
     mySocket = myBackup;
 }
@@ -106,7 +104,7 @@ void Socket::GetAndSendMessage( )
     //cout<<"Send > ";
     memset( message, '\0', 256);
     //cin.get( message, STRLEN );
-    message[256] = '\0';
+    message[255] = '\0';
     SendData( message );
     //cin.ignore(numeric_limits<streamsize>::max(),'\n');
     //fflush(stdin);
@@ -300,14 +298,14 @@ void ServerSocket::Accept( )
 		struct passedInfo acceptedInfo;
 		acceptSocket = accept( myBackup, (SOCKADDR*) &clientSocket, &client_length );
 
-		while ( acceptSocket == SOCKET_ERROR )
+		while ( (int)acceptSocket == SOCKET_ERROR )
 		{
 			acceptSocket = accept( myBackup, (SOCKADDR*) &clientSocket, &client_length );
 		}
 		count++;
 		acceptedInfo.passedSocket = acceptSocket;
 		acceptedInfo.conCount = count;
-		//cout << acceptedInfo.conCount << endl;
+
         hThread = CreateThread( NULL, 0, ReceiveCommand, (LPVOID)&acceptedInfo, 0, &dwThreadId);
         if ( hThread == NULL )
         {
@@ -473,20 +471,21 @@ void ServerSocket::sendFile( char* fileName )
 //Variables: ipAddress, port, myAddress, mySocket, myAddres
 //Returns:   void
 //------------------------------------------------------------------------------
-void ClientSocket::ConnectToServer( const char *ipAddress, int port )
+bool ClientSocket::ConnectToServer( const char *ipAddress, int port )
 {
     myAddress.sin_family = AF_INET;
     myAddress.sin_addr.s_addr = inet_addr( ipAddress );
     myAddress.sin_port = htons( port );
 
 	try {
-	    if ( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
-			throw "ClientSocket: Failed to connect\n";
-	} catch( char* str ) {
+	    if( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
+            return false;
+	} catch( exception& e ) {
         char error[128] = "Exception raised: ";
-		strcat( error, str );
+		strcat( error, e.what( ) );
 		logErrorInfo( error );
         WSACleanup( );
         exit( 20 );
     }
+    return true;
 }

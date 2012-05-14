@@ -14,7 +14,7 @@ class SMTPClient : public ClientSocket
 		bool checkError( char* );
 		void removeUser( char* );
 		void hwndToChar( HWND, char* );
-		void DNSPoll( HWND, char* );
+		void DNSPoll( HWND, HWND, char* );
 		void SendDataToServer( HWND, char* );
 	public:
 		SMTPClient( );

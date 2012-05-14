@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <iostream>
 #include "SMTPClient.h"
 #include <ctime>
 // Define control identifiers
@@ -48,7 +47,7 @@ HWND CreateAddress(char* tempText, int x, int y, int width, int height, int iden
 {
     HWND hAddressTemp;
     hAddressTemp = CreateWindowEx( WS_EX_CLIENTEDGE, "EDIT", tempText,
-									WS_CHILD | WS_VISIBLE,
+									WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
 									x, y, width, height, hwnd, 
 									(HMENU)identifier, hInstance, NULL);
     return hAddressTemp;
@@ -258,7 +257,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						//DNSPoll( hwnd, IPAddress, &connectDNS );
 						
 						SMTPClient connectSMTP;
-						connectSMTP.ConnectToServer( IPAddress, 8080 );
+						if( connectSMTP.ConnectToServer( IPAddress, 8080 ) ) 
+						{
+							MessageBox( popup, "Could not connect to server\n\0", "Error", MB_OK );
+							return 1;
+						}
 						
 						if( !connectSMTP.recieve220( popup ) )
 							return 1;
@@ -289,7 +292,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						if( !connectSMTP.sendMessage( hwndTo, hwndFrom, hwndSubject, hwndEdit, popup ) )
 							return 1;
 
-						if( !connectSMTP.return354( popup ) ){}
+						if( !connectSMTP.return354( popup ) ){};
 						 	// 1;
 
 						if( !connectSMTP.recieveQueue( popup ) )
@@ -300,10 +303,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 						if( !connectSMTP.recieveEnd( popup ) )
 							return 1;
-						
-						strcpy( Message, "Message Sent" );
-						MessageBox( popup, Message, "End", MB_OK );
-						memset( Message, '\0', 128 );
 						
 						// Check the checkbox and clear the fields if checked
 						checkState = SendDlgItemMessage( hwnd, IDC_CHECK, BM_GETCHECK, 0, 0 ); 

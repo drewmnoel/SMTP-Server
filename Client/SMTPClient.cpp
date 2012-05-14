@@ -22,7 +22,7 @@ SMTPClient::SMTPClient( )
 //------------------------------------------------------------------------------
 SMTPClient::~SMTPClient( )
 {
-
+	CloseConnection( );
 }
 
 //------------------------------------------------------------------------------
@@ -375,6 +375,8 @@ bool SMTPClient::sendMessage( HWND hwndTo, HWND hwndFrom, HWND hwndSubject, HWND
 
 	free( convertBody );
 	free( messageBody );
+
+	return true;
 }
 
 //------------------------------------------------------------------------------
@@ -531,7 +533,7 @@ bool SMTPClient::checkError( char* temp )
 //------------------------------------------------------------------------------
 void SMTPClient::removeUser( char* temp )
 {
-	for( int x = 0; x < strlen( temp ); x++ )
+	for( int x = 0; x < (int)strlen( temp ); x++ )
 	{
 		if( temp[x] == '@' )
 		{
@@ -563,9 +565,8 @@ void SMTPClient::hwndToChar( HWND convert, char* temp )
 //Variables: hwndTemp, IPAddress, connect, popup, temp, send
 //Returns:   void
 //------------------------------------------------------------------------------
-void SMTPClient::DNSPoll( HWND hwndTemp, char* IPAddress )
+void SMTPClient::DNSPoll( HWND hwndTemp, HWND popup, char* IPAddress )
 {
-	static HWND popup;
 	char temp[128]; 
 	hwndToChar( hwndTemp, temp );
 	removeUser( temp );
