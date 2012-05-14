@@ -570,6 +570,18 @@ void SMTPClient::DNSPoll( HWND hwndTemp, HWND popup, char* IPAddress )
 	char temp[128]; 
 	hwndToChar( hwndTemp, temp );
 	removeUser( temp );
+	strcpy( IPAddress, "who " );
+	strcat( IPAddress, temp );
+	SendData( IPAddress );
+	memset( temp, '\0', 128 );
+	RecvData( IPAddress, 128 );
+	if( !( strlen( IPAddress ) > 1 ) ) 
+	{
+		if( strncmp( IPAddress, "3", 1 ) == 0 )
+			MessageBox( popup, "Bad Server Name", "DNS Query Error", MB_OK );
+		else if( strncmp( IPAddress, "4", 1 ) == 0 )
+			MessageBox( popup, "Bad Command Request", "DNS Query Error", MB_OK );
+	}
 }
 
 //------------------------------------------------------------------------------

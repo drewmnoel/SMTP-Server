@@ -478,14 +478,13 @@ bool ClientSocket::ConnectToServer( const char *ipAddress, int port )
     myAddress.sin_port = htons( port );
 
 	try {
-	    if( connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) ) == SOCKET_ERROR )
-            return false;
+	    connect( mySocket, (SOCKADDR*) &myAddress, sizeof( myAddress ) );
+        std::cout << "connected to server " << std::endl;
 	} catch( exception& e ) {
         char error[128] = "Exception raised: ";
 		strcat( error, e.what( ) );
-		logErrorInfo( error );
-        WSACleanup( );
-        exit( 20 );
+		std::cout << error << endl;
+        return false;
     }
     return true;
 }

@@ -246,22 +246,22 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						LRESULT checkState;
 						
 						static HWND popup;
-						char IPAddress[20] = "129.21.112.89";
+						char IPAddress[128]; memset( IPAddress, '\0', 128 );
 						char Message[128]; memset( Message, '\0', 128 );
 						char convert[128]; memset( convert, '\0', 128 );
 						static char endKey[1]; memset( endKey, '\0', sizeof( endKey ) );
 						//http://msdn.microsoft.com/en-us/library/system.windows.forms.textbox.autocompletesource.aspx
 						
-						//ClientSocket connectDNS;
-						//connectDNS.ConnectToServer( IPAddress, 53 );
-						//DNSPoll( hwnd, IPAddress, &connectDNS );
-						
-						SMTPClient connectSMTP;
-						if( connectSMTP.ConnectToServer( IPAddress, 8080 ) ) 
-						{
-							MessageBox( popup, "Could not connect to server\n\0", "Error", MB_OK );
+						SMTPClient connectDNS;
+
+						if( !connectDNS.ConnectToServer( "129.21.112.89", 53 ) )
 							return 1;
-						}
+						connectDNS.DNSPoll( hwndFrom, popup, IPAddress );
+						connectDNS.CloseConnection( );
+
+						SMTPClient connectSMTP;
+						if( !connectSMTP.ConnectToServer( IPAddress, 8080 ) )
+							return 1;
 						
 						if( !connectSMTP.recieve220( popup ) )
 							return 1;
@@ -292,8 +292,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						if( !connectSMTP.sendMessage( hwndTo, hwndFrom, hwndSubject, hwndEdit, popup ) )
 							return 1;
 
-						if( !connectSMTP.return354( popup ) ){};
-						 	// 1;
+						connectSMTP.return354( popup );
 
 						if( !connectSMTP.recieveQueue( popup ) )
 							return 1;
